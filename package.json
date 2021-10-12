@@ -7,7 +7,7 @@
     "start": "node -r dotenv/config build/server/index.js",
     "prebuild": "npm run clean",
     "build": "tsc",
-    "dev": "nodemon --watch src -e ts src/index.ts",
+    "dev": "nodemon -r dotenv/config --watch src -e ts src/index.ts dotenv_config_path=./.env",
     "lint": "balena-lint -e ts -e js --fix src/",
     "clean": "rimraf build",
     "test": "node -r dotenv/config test/index.js dotenv_config_path=./.env.test"
