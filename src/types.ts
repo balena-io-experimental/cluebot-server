@@ -1,4 +1,4 @@
-export type DatabaseModel = 'players' | 'puzzles' | 'answers';
+export type DatabaseModel = 'players' | 'questions' | 'answers';
 
 export interface IPlayers {
 	id: number;
@@ -7,7 +7,7 @@ export interface IPlayers {
 	is_playing: boolean;
 }
 
-export interface IPuzzles {
+export interface IQuestions {
 	id: number;
 	question: string;
 	hint: string | null;
@@ -17,7 +17,7 @@ export interface IPuzzles {
 export interface IAnswers {
 	id: number;
 	player_id: number;
-	puzzle_id: number;
+	question_id: number;
 	answer: string;
 	votes: number;
 	date_answered: string;

@@ -2,24 +2,21 @@
     "players": [
         {
             "id": 1,
-            "name": "Christoph Waltz",
             "handle": "cwaltz",
             "is_playing": true
         },
         {
             "id": 2,
-            "name": "Emma Watson",
             "handle": "ewatson",
             "is_playing": true
         },
         {
             "id": 3,
-            "name": "Barack Obama",
             "handle": "obamaout",
             "is_playing": false
         }
     ],
-    "puzzles": [
+    "questions": [
         {
             "id": 1,
             "question": "Is it ba-LEE-na or BA-leh-na or ba-LAY-na?",
@@ -37,7 +34,7 @@
         {
             "id": 1,
             "player_id": 1,
-            "puzzle_id": 1,
+            "question_id": 1,
             "answer": "None of these, it's pronounced balina",
             "votes": 0,
             "date_answered": "2020-01-02T00:00:00.000Z"
@@ -45,7 +42,7 @@
         {
             "id": 2,
             "player_id": 2,
-            "puzzle_id": 1,
+            "question_id": 1,
             "answer": "ba-LAY-na",
             "votes": 3,
             "date_answered": "2020-01-03T00:00:00.000Z"
@@ -53,7 +50,7 @@
         {
             "id": 3,
             "player_id": 3,
-            "puzzle_id": 1,
+            "question_id": 1,
             "answer": "idk",
             "votes": 0,
             "date_answered": "2020-01-04T00:00:00.000Z"
@@ -61,7 +58,7 @@
         {
             "id": 4,
             "player_id": 1,
-            "puzzle_id": 2,
+            "question_id": 2,
             "answer": "Heisenberg",
             "votes": 2,
             "date_answered": "2020-01-09T00:00:00.000Z"
@@ -69,7 +66,7 @@
         {
             "id": 5,
             "player_id": 2,
-            "puzzle_id": 2,
+            "question_id": 2,
             "answer": "Walter White",
             "votes": 1,
             "date_answered": "2020-01-10T00:00:00.000Z"

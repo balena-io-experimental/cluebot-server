@@ -6,7 +6,7 @@
  * `knex migrate:latest`  // Creates or updates schemas
  * `knex seed:run`        // Seeds database with test data
  */
-require('dotenv').config({ path: './.env' });
+require('dotenv').config({ path: './.env.dev' });
 
 module.exports = {
     client: 'sqlite3',

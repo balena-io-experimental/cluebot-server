@@ -1,13 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <title>Cluebot Senpai</title>
+</head>
 
 <body>
     <h1>{{ question }}</h1>
-<textarea name="comment" form="usrform">Answer here...</textarea>
-<form action="/action_page.php" id="usrform">
-    <input type="submit" value="Answer">
-</form>
-
+    <form id="usrform">
+        <input type="text" name="handle" id="handle" />
+        <textarea name="answer" form="usrform" id="answer">Answer here...</textarea>
+        <input type="submit" onclick="handleSubmit" id="submit" />
+    </form>
 </body>
 
+<script>
+    window.onload = () => {
+        document.getElementById('submit').onclick = function () {
+            const handle = document.getElementById('handle');
+            const answer = document.getElementById('answer');
+            console.log(handle, answer);
+        }
+    }
+</script>
 </html>

@@ -1,7 +1,7 @@
 import Knex from 'knex';
 
-import { IPlayers, IPuzzles, IAnswers, PickRename } from './types';
-import { NotFoundError } from './errors';
+import { IPlayers, IQuestions, IAnswers } from './types';
+import { NotFoundError, InternalInconsistencyError } from './errors';
 import { randIntFromInterval, toTimestamp, isNewerThan } from './utils';
 
 const knex = Knex({
@@ -13,8 +13,8 @@ const knex = Knex({
 });
 
 // By passing the interface types here, we get better autocompletion support later in the query
-const Players = () => knex<IPlayers>('players as pl');
-const Puzzles = () => knex<IPuzzles>('puzzles as pu');
+const Players = () => knex<IPlayers>('players as p');
+const Questions = () => knex<IQuestions>('questions as q');
 const Answers = () => knex<IAnswers>('answers as a');
 
 /**
@@ -36,12 +36,11 @@ export const getCurrentPlayers = async () => {
 /**
  * Get details for a player
  */
-const getPlayer = async (handle: IPlayers['handle']) => {
+export const getPlayer = async (handle: IPlayers['handle']) => {
 	try {
 		return await Players().select().where({ handle });
-	} catch (e) {
-		console.error(`getPlayer error: ${e}`);
-		throw e;
+	} catch {
+		return [];
 	}
 };
 
@@ -50,13 +49,12 @@ const getPlayer = async (handle: IPlayers['handle']) => {
  * If player exists (based on their handle), update their information.
  */
 export const addOrUpdatePlayer = async ({
-	name,
 	handle,
-	is_playing = false,
-}: Pick<IPlayers, 'name' | 'handle' | 'is_playing'>) => {
+	is_playing = true,
+} : Partial<Pick<IPlayers, 'handle' | 'is_playing'>>) => {
 	try {
 		return await Players()
-			.insert({ name, handle, is_playing })
+			.insert({ handle, is_playing })
 			.onConflict(['handle'])
 			.merge();
 	} catch (e) {
@@ -66,7 +64,7 @@ export const addOrUpdatePlayer = async ({
 };
 
 /**
- * Delete a player based on their handle.
+ * Delete a player based on their handle - for when people leave company
  */
 export const deletePlayer = async (handle: IPlayers['handle']) => {
 	try {
@@ -78,48 +76,57 @@ export const deletePlayer = async (handle: IPlayers['handle']) => {
 };
 
 /**
- * Puzzle methods
+ * Question methods
  */
 /**
- * Get the current puzzle of the week. Only returns the most recently asked one.
+ * Get the current question of the week. Only returns the most recently asked one.
  */
-export const getCurrentPuzzle = async () => {
+export const getCurrentQuestion = async () => {
 	try {
-		return await Puzzles()
+		const curQuestion = await Questions()
 			.select(['id', 'question', 'hint'])
 			.whereNot({ last_asked: null })
 			.orderBy('last_asked', 'desc')
 			.first();
+
+		if (!curQuestion) {
+			throw new InternalInconsistencyError(`
+				Expected a question for the current week, got: ${JSON.stringify(curQuestion)}.
+				Are there questions in the cluebot database?
+			`);
+		} else {
+			return curQuestion;
+		}
 	} catch (e) {
-		console.error(`getCurrentPuzzle error: ${e}`);
+		console.error(`getCurrentQuestion error: ${e}`);
 		throw e;
 	}
 };
 
-export const getPuzzleById = async (id: IPuzzles['id']) => {
-	try {
-		return await Puzzles().select({ id });
-	} catch (e) {
-		console.error(`getPuzzleById error: ${e}`);
-		throw e;
-	}
-};
+// export const getQuestionById = async (id: IQuestions['id']) => {
+// 	try {
+// 		return await Questions().select({ id });
+// 	} catch (e) {
+// 		console.error(`getQuestionById error: ${e}`);
+// 		throw e;
+// 	}
+// };
 
 /**
- * Select a random puzzle to be set as the current week's puzzle.
+ * Select a random question to be set as the current week's question.
  */
-export const setCurrentPuzzle = async () => {
+export const setCurrentQuestion = async () => {
 	try {
-		const nullPuzzles = await Puzzles().whereNull('last_asked');
-		if (nullPuzzles.length) {
-			const chosenIdx = randIntFromInterval(0, nullPuzzles.length - 1);
-			await Puzzles()
-				.select({ id: nullPuzzles[chosenIdx].id })
+		const nullQuestions = await Questions().whereNull('last_asked');
+		if (nullQuestions.length) {
+			const chosenIdx = randIntFromInterval(0, nullQuestions.length - 1);
+			await Questions()
+				.select({ id: nullQuestions[chosenIdx].id })
 				.update({ last_asked: toTimestamp(Date.now()) });
 		} else {
 		}
 	} catch (e) {
-		console.error(`getRandomPuzzle error: ${e}`);
+		console.error(`setCurrentQuestion error: ${e}`);
 		throw e;
 	}
 };
@@ -134,9 +141,9 @@ export const getAnswersForPlayer = async (handle: IPlayers['handle']) => {
 			throw new NotFoundError(`Player with handle '${handle}' does not exist`);
 		}
 		return await Answers()
-			.join('puzzles as pu', 'a.puzzle_id', 'pu.id')
+			.join('questions as q', 'a.question_id', 'q.id')
 			.where({ player_id: players[0].id })
-			.select('a.answer', 'a.votes', 'a.date_answered', 'pu.question')
+			.select('a.answer', 'a.votes', 'a.date_answered', 'q.question')
 			.orderBy('a.date_answered', 'desc');
 	} catch (e) {
 		console.error(`getAnswersForPlayer error: ${e}`);
@@ -149,25 +156,21 @@ export const getAnswersForPlayer = async (handle: IPlayers['handle']) => {
  */
 export const setOrUpdateAnswerForPlayer = async ({
 	handle,
-	puzzleId,
 	answer,
-}: Pick<IPlayers, 'handle'> &
-	PickRename<IPuzzles, 'id', 'puzzleId'> &
-	Pick<IAnswers, 'answer'>) => {
+}: 	Pick<IPlayers, 'handle'> &
+	Pick<IAnswers, 'answer'>
+) => {
 	try {
 		const players = await getPlayer(handle);
 		if (!players.length) {
 			throw new NotFoundError(`Player with handle '${handle}' does not exist`);
 		}
 
-		const puzzles = await getPuzzleById(puzzleId);
-		if (!puzzles.length) {
-			throw new NotFoundError(`Puzzle with id '${puzzleId}' does not exist`);
-		}
+		const { id } = await getCurrentQuestion();
 
 		// Update answer if it exists and is newer than a week old
 		const answerIfExists = await Answers()
-			.where({ player_id: players[0].id, puzzle_id: puzzleId })
+			.where({ player_id: players[0].id, question_id: id })
 			.orderBy('date_answered', 'desc');
 		if (
 			answerIfExists.length &&
@@ -180,7 +183,7 @@ export const setOrUpdateAnswerForPlayer = async ({
 			// Else create new entry
 			return await Answers().insert({
 				player_id: players[0].id,
-				puzzle_id: puzzleId,
+				question_id: id,
 				answer,
 			});
 		}

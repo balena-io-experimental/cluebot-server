@@ -4,24 +4,24 @@
   "description": "A bot host for a collaborative puzzle game about remote work",
   "main": "index.js",
   "scripts": {
-    "start": "node -r dotenv/config build/server/index.js",
+    "start": "node -r dotenv/config build/server/index.js dotenv_config_path=./.env.prod",
     "prebuild": "npm run clean",
     "build": "tsc",
-    "dev": "nodemon -r dotenv/config --watch src -e ts src/index.ts dotenv_config_path=./.env",
+    "dev": "nodemon -r dotenv/config --watch src -e ts src/index.ts dotenv_config_path=./.env.dev",
     "lint": "balena-lint -e ts -e js --fix src/",
     "clean": "rimraf build",
     "test": "node -r dotenv/config test/index.js dotenv_config_path=./.env.test"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/balena-io-playground/cluebot.git"
+    "url": "git+https://github.com/balena-io-playground/cluebot-server.git"
   },
   "author": "",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/balena-io-playground/cluebot/issues"
+    "url": "https://github.com/balena-io-playground/cluebot-server/issues"
   },
-  "homepage": "https://github.com/balena-io-playground/cluebot#readme",
+  "homepage": "https://github.com/balena-io-playground/cluebot-server#readme",
   "devDependencies": {
     "@balena/lint": "^6.1.1",
     "@types/express": "^4.17.13",
@@ -41,7 +41,6 @@
   "dependencies": {
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "knex": "^0.95.11",
     "moment": "^2.29.1",
     "mustache": "^4.2.0",
     "sqlite3": "^5.0.2"
