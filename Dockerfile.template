@@ -1,0 +1,6 @@
+ARG NODE_VERSION=14.17
+
+FROM balenalib/%%BALENA_MACHINE_NAME%%-debian-node:$NODE_VERSION as base
+WORKDIR /usr/src/app
+
+# TODO
