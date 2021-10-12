@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <h1>{{ question }}</h1>
+<textarea name="comment" form="usrform">Answer here...</textarea>
+<form action="/action_page.php" id="usrform">
+    <input type="submit" value="Answer">
+</form>
+
+</body>
+
+</html>

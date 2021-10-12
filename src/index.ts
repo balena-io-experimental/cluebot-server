@@ -1,5 +1,7 @@
 import path from 'path';
 import express from 'express';
+import Mustache from 'mustache';
+import fs from 'fs';
 
 (() => {
 	if (!process.env.DB_PATH || typeof process.env.DB_PATH !== 'string') {
@@ -19,8 +21,11 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.resolve(__dirname, 'public')));
 
-app.get('/', (_req, res) => {
-	res.send('OK');
+app.get('/question/:id', (_req, res) => {
+	const template = fs.readFileSync(path.join(__dirname, 'index.template'), 'utf8');
+	var rendered = Mustache.render(template, { question: 'TEST QUESTION' });
+
+	res.send(rendered);
 });
 
 app.listen(PORT, () => {
