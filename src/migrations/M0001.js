@@ -1,20 +1,31 @@
 // Add tables (without foreign keys). Comments are examples of entries
 exports.up = function (knex) {
-	return Promise.all([
-		// List of players with their names and company handles, and whether they're playing currently
-		knex.schema.createTable('players', (t) => {
-			t.increments('id').primary();
-			t.string('handle').unique(); // jsmith123
-			t.boolean('is_playing').defaultTo(true); // true
-		}),
-		// List of puzzles with questions and hints
-		knex.schema.createTable('questions', (t) => {
-			t.increments('id').primary();
-			t.text('question').notNullable(); // Why is the company named balena?
-			t.text('hint'); // Think translations...
-			t.timestamp('last_asked'); // 2021-01-01T00:00:00.000Z
-		}),
-	]);
+	const schemas = [
+		{
+			// List of players with their names and company handles, and whether they're playing currently
+			table: 'players',
+			schemaFn:  (t) => {
+				t.increments('id').primary();
+				t.string('handle').unique();
+				t.boolean('is_playing').defaultTo(true);
+			}
+		},
+		{
+			// List of questions with questions and hints
+			table: 'questions',
+			schemaFn: (t) => {
+				t.increments('id').primary();
+				t.text('question').notNullable();
+				t.text('hint');
+				t.timestamp('last_asked');
+			}
+		}
+	];
+
+	return Promise.all(schemas.map(({ table, schemaFn }) => {
+		return knex.schema.dropTableIfExists(table)
+			.then(() => knex.schema.createTable(table, schemaFn));
+	}));
 };
 
 exports.down = function (knex) {
