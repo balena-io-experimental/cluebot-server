@@ -108,7 +108,7 @@
             margin: auto;
             width: 50%;
             padding: 10px;
-            justify-content: center;s
+            justify-content: center;
         }
         /*Animated text*/
         
@@ -119,33 +119,30 @@
   display: flex;
 }
 
-.b, .o, .u, .n, .c, .e {
+//.b, .o, .u, .n, .c, .e, 
+
+.m, .a, .y {
   position: relative;
   color: #4cc9f0;
   text-shadow: 0 3px #4361ee, 0 5px #4361ee, 0 7px #4361ee;
 }
 
-.b {
-  animation: bounce 1s ease infinite;
-  -webkit-animation: bounce 1s ease infinite;
-}
-
-.o {
-  animation: bounce 1s ease infinite .1s;
+.m{
+     animation: bounce 1s ease infinite .1s;
   -webkit-animation: bounce 1s ease infinite .1s;
 }
-
-.u {
-  animation: bounce 1s ease infinite .2s;
+.a{
+      animation: bounce 1s ease infinite .2s;
   -webkit-animation: bounce 1s ease infinite .2s;
 }
 
-.n {
-  animation: bounce 1s ease infinite .3s;
+.y{
+       animation: bounce 1s ease infinite .3s;
   -webkit-animation: bounce 1s ease infinite .3s;
 }
 
-.c {
+
+.b {
   animation: bounce 1s ease infinite .4s;
   -webkit-animation: bounce 1s ease infinite .4s;
 }
@@ -155,10 +152,105 @@
  -webkit-animation: bounce 1s ease infinite .5s;
 }
 
+.s {
+  animation: bounce 1s ease infinite .6s;
+ -webkit-animation: bounce 1s ease infinite .6s;
+}
+
+.e_1 {
+  animation: bounce 1s ease infinite .7s;
+ -webkit-animation: bounce 1s ease infinite .7s;
+}
+
+.n {
+  animation: bounce 1s ease infinite .8s;
+ -webkit-animation: bounce 1s ease infinite .8s;
+}
+
+.a_1 {
+  animation: bounce 1s ease infinite .9s;
+ -webkit-animation: bounce 1s ease infinite .9s;
+}
+
+.i {
+  animation: bounce 1s ease infinite 1s;
+ -webkit-animation: bounce 1s ease infinite 1s;
+}
+
+.w{
+  animation: bounce 1s ease infinite 1.1s;
+ -webkit-animation: bounce 1s ease infinite 1.1s;
+}
+
+.i_1{
+  animation: bounce 1s ease infinite 1.2s;
+ -webkit-animation: bounce 1s ease infinite 1.2s;
+}
+
+.l{
+  animation: bounce 1s ease infinite 1.3s;
+ -webkit-animation: bounce 1s ease infinite 1.3s;
+}
+
+.l_1{
+  animation: bounce 1s ease infinite 1.4s;
+ -webkit-animation: bounce 1s ease infinite 1.4s;
+}
+
+.n_1{
+  animation: bounce 1s ease infinite 1.5s;
+ -webkit-animation: bounce 1s ease infinite 1.5s;
+}
+
+.o {
+  animation: bounce 1s ease infinite 1.6s;
+  -webkit-animation: bounce 1s ease infinite 1.6s;
+}
+
+.t {
+  animation: bounce 1s ease infinite 1.7s;
+  -webkit-animation: bounce 1s ease infinite 1.7s;
+}
+
+.i_2 {
+  animation: bounce 1s ease infinite 1.7s;
+  -webkit-animation: bounce 1s ease infinite 1.7s;
+}
+
+
+.c {
+  animation: bounce 1s ease infinite 1.8s;
+  -webkit-animation: bounce 1s ease infinite 1.8s;
+}
+
+.e {
+  animation: bounce 1s ease infinite 1.9s;
+  -webkit-animation: bounce 1s ease infinite 1.9s;
+}
+
+.y_1 {
+  animation: bounce 1s ease infinite 2.0s;
+  -webkit-animation: bounce 1s ease infinite 2.0s;
+}
+
+.o_1 {
+  animation: bounce 1s ease infinite 2.1s;
+  -webkit-animation: bounce 1s ease infinite 2.1s;
+}
+
+
+.u {
+  animation: bounce 1s ease infinite 2.2s;
+  -webkit-animation: bounce 1s ease infinite 2.2s;
+}
+
+
+
+
  @keyframes bounce {
         0%   { transform: scale(1,1) translateY(0); }
         10%  { transform: scale(1.1,.9) translateY(0); }
-        30%  { transform: scale(.9,1.1)   translateY(-55px);}
+        30%  { transform: scale(.9,1.1)   translateY(-20px);}
         50%  { transform: scale(1.05,.95) translateY(0); }
         58%  { transform: scale(1,1) translateY(-7px); }
         65%  { transform: scale(1,1) translateY(0);}
@@ -168,7 +260,7 @@
 @-webkit-keyframes bounce {
        0%   { transform: scale(1,1) translateY(0); }
         10%  { transform: scale(1.1,.9) translateY(0); }
-        30%  { transform: scale(.9,1.1)   translateY(-55px);}
+        30%  { transform: scale(.9,1.1)   translateY(-20px);}
         50%  { transform: scale(1.05,.95) translateY(0); }
         58%  { transform: scale(1,1) translateY(-7px);}
         65%  { transform: scale(1,1) translateY(0);}
@@ -183,7 +275,7 @@
   width: 50px;
   height:5px;
   border-radius:50%;
-  top:82px;
+  top:40px;
   z-index:-1;
 }
 
@@ -233,22 +325,41 @@
                 <p id="subtitle">Enter your answer below...</p>
                 <div class="senpai">
                     <img src="/static/owo_whats_this_smol.png" height=80 width=80></img>
+                       <!-- <p id="subtitle">Maybe senpai will notice you.</p> -->
                     <div class="bouncing-text">
-                    <p id="subtitle">Maybe senpai will notice you.</p>
-
+                
+                    <div class="m">M</div>
+                    <div class="a">a</div>
+                    <div class="y">y</div>
+                    <div class="b">b</div>
+                    <div class="e">e</div>
+                    <div>&nbsp;</div>
+                    <div class="s">s</div>
+                    <div class="e_1">e</div>
+                    <div class="n">n</div>
+                    <div class="p">p</div>
+                    <div class="a_1">a</div>
+                    <div class="i_1">i</div>
+                    <div>&nbsp;</div>
+                    <div class="w">w</div>
+                    <div class="i_2">i</div>
+                    <div class="l">l</div>
+                    <div class="1_1">l</div>
+                    <div>&nbsp;</div>
+                    <div class="n_1">n</div>
+                    <div class="o">o</div>
+                    <div class="t">t</div>
+                    <div class="i_1">i</div>
+                    <div class="c">c</div>
+                    <div class="e_1">e</div>
+                    <div>&nbsp;</div>
+                    <div class="y_1">y</div>
+                    <div class="o_1">o</div>
+                    <div class="u">u</div>
                     </div>
                     <img src="/static/owo_whats_this_smol.png" height=80 width=80></img>
                 </div>
-                <div class="bouncing-text">
-  <div class="b">B</div>
-  <div class="o">O</div>
-  <div class="u">U</div>
-  <div class="n">N</div>
-  <div class="c">C</div>
-  <div class="e">E</div>
-  <div class="shadow"></div>
-  <div class="shadow-two"></div>
-</div>
+              
             </div>
         </header>
 

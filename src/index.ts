@@ -90,7 +90,6 @@ app.post('/api/answer', async (req, res) => {
 	}
 });
 
-// TODO: CHANGE TO POST
 app.post('/api/import', async (req, res) => {
 	// Local path in heroku server deployment
 	const { path } = req.body;
@@ -103,6 +102,9 @@ app.post('/api/import', async (req, res) => {
 	try {
 		const exists = await fs.promises.stat(Path.resolve(__dirname, path));
 		if (!exists) {
+			// curl --upload-file /path/to/csv https://transfer.sh/
+			// https://transfer.sh/66nb8/config.yml
+			// wget https://transfer.sh/66nb8/config.yml
 			return res.status(400).json({ error: `File not found in current directory '${process.cwd()}'. Try transferring a .csv file first with 'curl --upload-file /path/to/file.csv https://transfer.sh', then 'wget' the returned URL from the heroku production server` });
 		}
 
