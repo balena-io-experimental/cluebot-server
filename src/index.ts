@@ -19,13 +19,10 @@ import { NotFoundError } from './errors';
 
 	// Migrate to latest db schema
 	await db.migrateLatest();
-	await db.seedRun();
 })();
 
 const app = express();
 const PORT = process.env.PORT;
-
-var error_message = "ERROR";
 
 app.use(express.json());
 app.use('/static', express.static(Path.resolve(__dirname, 'static')));
@@ -37,7 +34,7 @@ app.get('/', async (_req, res) => {
 		'utf8',
 	);
 	const { question } = await db.getCurrentQuestion();
-	const rendered = Mustache.render(template, { question, error_message });
+	const rendered = Mustache.render(template, { question});
 
 	res.send(rendered);
 });
@@ -50,17 +47,10 @@ app.get('/api/players', async (_req, res) => {
 	} catch (e) {
 		console.error(e);
 		res.status(500).json({ error: `Internal server error: ${e}` });
-		error_message = "Eerererrorrr";
+	
 	
 	}
 
-	const template = fs.readFileSync(
-		Path.join(__dirname, 'index.template'),
-		'utf8',
-	);
-	const rendered = Mustache.render(template, { error_message });
-
-	res.send(rendered);
 });
 
 app.post('/api/answer', async (req, res) => {
@@ -101,9 +91,9 @@ app.post('/api/answer', async (req, res) => {
 });
 
 // TODO: CHANGE TO POST
-app.get('/api/import', async (_req, res) => {
-	//const { path } = req.body;
-	const path = 'test.csv'
+app.post('/api/import', async (req, res) => {
+	// Local path in heroku server deployment
+	const { path } = req.body;
 
 	if (typeof path !== 'string' || path[0] === '/' || !path.includes('.csv')) {
 		console.log('not passed', path);
@@ -113,8 +103,7 @@ app.get('/api/import', async (_req, res) => {
 	try {
 		const exists = await fs.promises.stat(Path.resolve(__dirname, path));
 		if (!exists) {
-			console.log('not exssts', process.cwd());
-			return res.status(400).json({ error: `File not found in current directory '${process.cwd()}'. Try importing the .csv file first with scp` });
+			return res.status(400).json({ error: `File not found in current directory '${process.cwd()}'. Try transferring a .csv file first with 'curl --upload-file /path/to/file.csv https://transfer.sh', then 'wget' the returned URL from the heroku production server` });
 		}
 
 		await db.importQuestions(path);

@@ -91,17 +91,136 @@
         }
 
         img {
-    -webkit-animation: mover 2s infinite  alternate;
-    animation: mover 2s infinite  alternate;
+            -webkit-animation: mover 2s infinite  alternate;
+            animation: mover 2s infinite  alternate;
+        }
+        @-webkit-keyframes mover {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-20px); }
+        }
+        @keyframes mover {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-20px); }
+        }
+        .senpai{
+            display: flex;
+            flex-direction: row;
+            margin: auto;
+            width: 50%;
+            padding: 10px;
+            justify-content: center;s
+        }
+        /*Animated text*/
+        
+
+
+.bouncing-text {
+  position: relative;
+  display: flex;
 }
-@-webkit-keyframes mover {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-20px); }
+
+.b, .o, .u, .n, .c, .e {
+  position: relative;
+  color: #4cc9f0;
+  text-shadow: 0 3px #4361ee, 0 5px #4361ee, 0 7px #4361ee;
 }
-@keyframes mover {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-20px); }
+
+.b {
+  animation: bounce 1s ease infinite;
+  -webkit-animation: bounce 1s ease infinite;
 }
+
+.o {
+  animation: bounce 1s ease infinite .1s;
+  -webkit-animation: bounce 1s ease infinite .1s;
+}
+
+.u {
+  animation: bounce 1s ease infinite .2s;
+  -webkit-animation: bounce 1s ease infinite .2s;
+}
+
+.n {
+  animation: bounce 1s ease infinite .3s;
+  -webkit-animation: bounce 1s ease infinite .3s;
+}
+
+.c {
+  animation: bounce 1s ease infinite .4s;
+  -webkit-animation: bounce 1s ease infinite .4s;
+}
+
+.e {
+  animation: bounce 1s ease infinite .5s;
+ -webkit-animation: bounce 1s ease infinite .5s;
+}
+
+ @keyframes bounce {
+        0%   { transform: scale(1,1) translateY(0); }
+        10%  { transform: scale(1.1,.9) translateY(0); }
+        30%  { transform: scale(.9,1.1)   translateY(-55px);}
+        50%  { transform: scale(1.05,.95) translateY(0); }
+        58%  { transform: scale(1,1) translateY(-7px); }
+        65%  { transform: scale(1,1) translateY(0);}
+        100% { transform: scale(1,1) translateY(0);}
+    }
+
+@-webkit-keyframes bounce {
+       0%   { transform: scale(1,1) translateY(0); }
+        10%  { transform: scale(1.1,.9) translateY(0); }
+        30%  { transform: scale(.9,1.1)   translateY(-55px);}
+        50%  { transform: scale(1.05,.95) translateY(0); }
+        58%  { transform: scale(1,1) translateY(-7px);}
+        65%  { transform: scale(1,1) translateY(0);}
+        100% { transform: scale(1,1) translateY(0);} 
+}
+
+
+.bouncing-text:before, .bouncing-text:after {
+  content:"";
+  position: absolute;
+  background-color: rgba(0,0,0,0.4);
+  width: 50px;
+  height:5px;
+  border-radius:50%;
+  top:82px;
+  z-index:-1;
+}
+
+
+
+.bouncing-text:before {
+  left:0;
+  animation: scale 1s linear infinite;
+  -webkit-animation: scale 1s linear infinite;
+}
+
+@keyframes scale {
+  0% {transform: scaleX(1);}
+  25% {transform: scaleX(0.4);}
+  50% {transform: scaleX(1);}
+  75% {transform: scaleX(0.9);}
+  100% {transform: scaleX(1);}
+}
+
+@-webkit-keyframes scale {
+   0% {transform: scaleX(1);}
+  25% {transform: scaleX(0.4);}
+  50% {transform: scaleX(1);}
+  75% {transform: scaleX(0.9);}
+  100% {transform: scaleX(1);}
+}
+
+.bouncing-text:after {
+  left: 57px;
+  animation: scale 1s linear infinite .1s;
+  -webkit-animation: scale 1s linear infinite .1s;
+}
+
+
+
+
+
     </style>
 </head>
 
@@ -110,22 +229,40 @@
         <header>
             <div>
                 <h1>{{ question }}</h1>
+               
                 <p id="subtitle">Enter your answer below...</p>
-                <p id="subtitle">Maybe senpai will notice you.</p>
+                <div class="senpai">
+                    <img src="/static/owo_whats_this_smol.png" height=80 width=80></img>
+                    <div class="bouncing-text">
+                    <p id="subtitle">Maybe senpai will notice you.</p>
+
+                    </div>
+                    <img src="/static/owo_whats_this_smol.png" height=80 width=80></img>
+                </div>
+                <div class="bouncing-text">
+  <div class="b">B</div>
+  <div class="o">O</div>
+  <div class="u">U</div>
+  <div class="n">N</div>
+  <div class="c">C</div>
+  <div class="e">E</div>
+  <div class="shadow"></div>
+  <div class="shadow-two"></div>
+</div>
             </div>
         </header>
 
         <div id="form">
             <div class="input_ctn">
-                <label for="handle">Handle:</label>
+                <label for="handle">Enter your Flowdock handle:</label>
                 <input type="text" name="handle" id="handle" spellcheck="false" autocomplete="false" />
             </div>
 
             <div class="input_ctn">
-                <label for="answer">Answer:</label>
+                <label for="answer">What's your answer?</label>
                 <textarea name="answer" id="answer" spellcheck="false"></textarea>
             </div>
-            <img src="/static/owo_whats_this_smol.png" height=80 width=80></img>
+         
 
             <!-- This is for displaying possible error messages, see inline script below. -->
             <p id="form-msg"></p>
@@ -176,7 +313,7 @@
                     })
                     .catch(({ error }) => {
                         console.error(error);
-                        message.innerText = 'Cluebot is sick with a case of internal server error 🙈';
+                        message.innerText = 'Cluebot might be sick with a case of internal server error 🙈, oooorrrr maybe you haven't joined the teamgame flow on Flowdock. Make sure you've joined before you answer!';
                         message.style.color = 'red';
                     });
             }

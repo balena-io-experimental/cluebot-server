@@ -1,6 +1,6 @@
 import Knex from 'knex';
 import path from 'path';
-import fs from 'fs';
+import csvToJson from 'csvtojson';
 
 import { IPlayers, IQuestions, IAnswers } from './types';
 import { NotFoundError, InternalInconsistencyError } from './errors';
@@ -60,9 +60,16 @@ export const destroy = async () => {
 };
 
 export const importQuestions = async (pathToCsv: string) => {
-	console.log('importing quetsions')
-	const csvData = await fs.promises.readFile(path.resolve(__dirname, pathToCsv), 'utf-8');
-	console.log(csvData);
+	const allQuestions = await (await Questions().select()).map(({ question }) => question);
+	let jsonFromCsv = await (await csvToJson()
+		.fromFile(path.resolve(__dirname, pathToCsv)))
+		.filter(({ question }) => 
+			!allQuestions.includes(question)
+		);
+
+	return await Promise.all(jsonFromCsv.map(({ question, hint }) => {
+		return Questions().insert({ question, hint: hint || null, last_asked: null });
+	}));
 };
 
 /**
