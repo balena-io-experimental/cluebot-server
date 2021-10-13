@@ -10,13 +10,9 @@ exports.up = function (knex) {
 			t.text('answer'); // It's translated into 'whale' in multiple languages, which references the Docker whale logo.
 			t.integer('votes'); // 2
 			t.timestamp('date_answered'); // 2021-01-03T00:00:00.000Z
-			t.foreign('player_id')
-				.references('id')
-				.inTable('players');
-			t.foreign('question_id')
-				.references('id')
-				.inTable('questions');
-		})
+			t.foreign('player_id').references('id').inTable('players');
+			t.foreign('question_id').references('id').inTable('questions');
+		});
 	});
 };
 

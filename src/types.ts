@@ -4,7 +4,7 @@ export interface IPlayers {
 	id: number;
 	name: string;
 	handle: string;
-	is_playing: boolean;
+	is_playing: boolean | number;
 }
 
 export interface IQuestions {

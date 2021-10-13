@@ -9,9 +9,9 @@
     "build": "tsc",
     "reseed": "rimraf ./database.sqlite3 && knex migrate:latest && knex seed:run",
     "dev": "nodemon -r dotenv/config --watch src -e ts src/index.ts dotenv_config_path=./.env.dev",
-    "lint": "balena-lint -e ts -e js --fix src/",
+    "lint": "balena-lint -e ts -e js --fix src/ tests/",
     "clean": "rimraf build",
-    "test": "node -r dotenv/config test/index.js dotenv_config_path=./.env.test"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -26,15 +26,18 @@
   "devDependencies": {
     "@balena/lint": "^6.1.1",
     "@types/express": "^4.17.13",
+    "@types/jest": "^27.0.2",
     "@types/moment": "^2.13.0",
     "@types/mustache": "^4.1.2",
     "@types/node": "^16.10.3",
     "@types/sqlite3": "^3.1.7",
     "husky": "^7.0.2",
+    "jest": "^27.2.5",
     "lint-staged": "^11.2.3",
     "nodemon": "^2.0.13",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
+    "ts-jest": "^27.0.5",
     "ts-node": "^10.3.0",
     "typed-error": "^3.2.1",
     "typescript": "^4.4.3"
@@ -48,6 +51,6 @@
     "sqlite3": "^5.0.2"
   },
   "lint-staged": {
-    "*.{ts,tsx}": "balena-lint -e ts -e js --fix src/"
+    "*.{ts,tsx}": "balena-lint -e ts -e js --fix src/ tests/"
   }
 }
