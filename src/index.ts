@@ -28,6 +28,7 @@ const PORT = process.env.PORT;
 var error_message = "ERROR";
 
 app.use(express.json());
+app.use('/static', express.static(Path.resolve(__dirname, 'static')));
 
 // Render answer submission page
 app.get('/', async (_req, res) => {

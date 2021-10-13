@@ -277,8 +277,10 @@ export const getAnswersForCurrentQuestion = async () => {
 	try {
 		const curQuestion = await getCurrentQuestion();
 		const curAnswers = await Answers()
+			.join('players as p', 'a.player_id', 'p.id')
+			.select('a.answer', 'a.votes', 'a.date_answered', 'p.handle')
 			.where({ question_id: curQuestion.id })
-			.orderBy('date_answered');
+			.orderBy('a.date_answered', 'desc');
 		return { question: curQuestion, answers: curAnswers };
 	} catch (e) {
 		console.error(`getAnswersForCurrentQuestion error: ${e}`);
