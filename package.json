@@ -4,9 +4,9 @@
   "description": "A bot host for a collaborative puzzle game about remote work",
   "main": "index.js",
   "scripts": {
-    "start": "node -r dotenv/config build/server/index.js dotenv_config_path=./.env.prod",
+    "start": "node -r dotenv/config build/index.js dotenv_config_path=./.env.prod",
     "prebuild": "npm run clean",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "reseed": "rimraf ./database.sqlite3 && knex migrate:latest && knex seed:run",
     "dev": "nodemon -r dotenv/config --watch src -e ts src/index.ts dotenv_config_path=./.env.dev",
     "lint": "balena-lint -e ts -e js --fix src/ tests/",
@@ -48,6 +48,7 @@
     "knex": "^0.95.11",
     "moment": "^2.29.1",
     "mustache": "^4.2.0",
+    "node-gyp": "^8.2.0",
     "sqlite3": "^5.0.2"
   },
   "lint-staged": {
