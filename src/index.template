@@ -2,23 +2,168 @@
 <html lang="en">
 <head>
     <title>Cluebot Senpai</title>
+    <style>
+        body, html {
+            font-family: monospace, sans-serif;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #080808;
+            color: white;
+        }
+        h1, p {
+            margin: 0;
+        }
+        #root {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            width: 1000px;
+            height: 100%;
+        }
+        header div {
+            margin-bottom: 5em;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 1em;
+        }
+        #subtitle {
+            font-size: 1.5em;
+            padding-bottom: 0.5em;
+        }
+        #subtitle:nth-of-type(2) {
+            font-size: 0.7em;
+        }
+        #question {
+            margin-bottom: 1.5em;
+            font-size: 2em;
+        }
+
+        #form {
+            width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .input_ctn {
+            margin: 1em 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+        .input_ctn label {
+            margin-bottom: 1em;
+        }
+        .input_ctn input, .input_ctn textarea {
+            width: 450px;
+            font-size: 1.2em;
+            font-family: inherit;
+        }
+        .input_ctn input {
+            height: 2em;
+        }
+        .input_ctn textarea {
+            height: 10em;
+        }
+        #form-msg {
+            padding-bottom: 1em;
+            height: 1em;
+        }
+        #submit {
+            font-family: inherit;
+            font-size: 1.5em;
+            background: none;
+            border: 2px solid white;
+            padding: 10px;
+            color: white;
+            cursor: pointer;
+        }
+        #submit:hover {
+            background: white;
+            color: black;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>{{ question }}</h1>
-    <form id="usrform">
-        <input type="text" name="handle" id="handle" />
-        <textarea name="answer" form="usrform" id="answer">Answer here...</textarea>
-        <input type="submit" onclick="handleSubmit" id="submit" />
-    </form>
+    <div id="root">
+        <header>
+            <div>
+                <h1>{{ question }}</h1>
+                <p id="subtitle">Enter your answer below...</p>
+                <p id="subtitle">Maybe senpai will notice you.</p>
+            </div>
+        </header>
+
+        <div id="form">
+            <div class="input_ctn">
+                <label for="handle">Handle:</label>
+                <input type="text" name="handle" id="handle" spellcheck="false" autocomplete="false" />
+            </div>
+
+            <div class="input_ctn">
+                <label for="answer">Answer:</label>
+                <textarea name="answer" id="answer" spellcheck="false"></textarea>
+            </div>
+
+            <!-- This is for displaying possible error messages, see inline script below. -->
+            <p id="form-msg"></p>
+
+            <input type="button" id="submit" value="Go!" />
+        </div>
+    </div>
 </body>
 
 <script>
-    window.onload = () => {
-        document.getElementById('submit').onclick = function () {
-            const handle = document.getElementById('handle');
-            const answer = document.getElementById('answer');
-            console.log(handle, answer);
+    window.onload = function() {
+        const handle = document.getElementById('handle');
+        const answer = document.getElementById('answer');
+        const message = document.getElementById('form-msg');
+        const submit = document.getElementById('submit');
+
+        const baseFontPx = 14;
+        let wrongCounter = baseFontPx;
+
+        submit.onclick = async function() {
+            if (!handle.value || !answer.value) {
+                message.innerText = 'Did you forget something? 👀';
+                message.style.color = 'red';
+                message.style.fontSize = `${wrongCounter}px`;
+                wrongCounter += 1;
+            } else {
+    
+                await fetch('/api/question', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        handle: handle.value, 
+                        answer: answer.value 
+                    })
+                })
+                    .then((resp) => resp.json())
+                    .then((resp) => {
+                        if (resp.error) {
+                            throw resp;
+                        }
+                        message.innerText = 'Thanks bae, come back later 😘';
+                        message.style.color = 'white';
+                        message.style.fontSize = `${baseFontPx}px`;
+                        wrongCounter = baseFontPx;
+                    })
+                    .catch(({ error }) => {
+                        console.error(error);
+                        message.innerText = 'Cluebot is sick with a case of internal server error 🙈';
+                        message.style.color = 'red';
+                    });
+            }
         }
     }
 </script>
