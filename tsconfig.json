@@ -8,13 +8,14 @@
         "lib": ["es2020"],
         "noUnusedLocals": true,
 		"noUnusedParameters": true,
-        "types": ["node"],
+        "types": ["node", "jest"],
         "preserveConstEnums": true,
         "removeComments": true,
         "allowJs": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
+        "resolveJsonModule": true
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "tests/**/*"],
     "exclude": ["/node_modules/"]
 }

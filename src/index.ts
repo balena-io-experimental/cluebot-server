@@ -4,6 +4,7 @@ import Mustache from 'mustache';
 import fs from 'fs';
 
 import * as db from './database';
+import { NotFoundError } from './errors';
 
 (() => {
 	if (!process.env.DB_PATH || typeof process.env.DB_PATH !== 'string') {
@@ -23,25 +24,29 @@ const PORT = process.env.PORT;
 app.use(express.json());
 
 // Render answer submission page
-app.get('/', (_req, res) => {
-	const template = fs.readFileSync(path.join(__dirname, 'index.template'), 'utf8');
-	var rendered = Mustache.render(template, { question: 'TEST QUESTION' });
+app.get('/', async (_req, res) => {
+	const template = fs.readFileSync(
+		path.join(__dirname, 'index.template'),
+		'utf8',
+	);
+	const { question } = await db.getCurrentQuestion();
+	const rendered = Mustache.render(template, { question });
 
 	res.send(rendered);
 });
 
-app.post('/api/question', async (req, res)=>{
-	// POST /api/question, body: { handle: 'cywang117', answer: 'idk' }
-	
+app.post('/api/question', async (req, res) => {
 	const { handle, answer } = req.body;
-	console.log(handle);
-	console.log(answer);
-	
+
 	if (typeof handle !== 'string') {
-		return res.status(400).json({ error: `Invalid handle in POST request. Expected a string, got: '${handle}'` });
+		return res.status(400).json({
+			error: `Invalid handle in POST request. Expected a string, got: '${handle}'`,
+		});
 	}
 	if (typeof answer !== 'string') {
-		return res.status(400).json({ error: `Invalid handle in POST request. Expected a string, got: '${handle}'` });
+		return res.status(400).json({
+			error: `Invalid answer in POST request. Expected a string, got: '${answer}'`,
+		});
 	}
 
 	try {
@@ -49,34 +54,42 @@ app.post('/api/question', async (req, res)=>{
 		// If player exists, update is_playing on their existing entry.
 		// If player doesn't exist, create entry in players table with handle and is_playing.
 		await db.setOrUpdateAnswerForPlayer({ handle, answer });
-		res.status(200).json({ message: `User with handle '${handle}' successfully submitted an answer` });
+		res
+			.status(200)
+			.json({ message: `Handle '${handle}' successfully submitted an answer` });
 	} catch (e) {
-		console.error(e);
-		res.status(500).json({ error: `Internal server error while adding or updating player entry: ${e}` });
+		if (e instanceof NotFoundError) {
+			res.status(400).json({
+				error: `Handle '${handle}' doesn't exist 😭. Try leaving and rejoining the flow.`,
+			});
+		} else {
+			res.status(500).json({
+				error: `Internal server error while adding or updating player entry: ${e}`,
+			});
+		}
 	}
 });
 
+// We can use this endpoint for getting hint(s) for a question as well
 app.get('/api/question', async (_req, res) => {
 	try {
 		const curQuestion = await db.getCurrentQuestion();
 		return res.status(200).json(curQuestion);
 	} catch (e) {
 		console.error(e);
-		res.status(500).json({ error: `Internal server error while getting current question: ${e}` });
+		res.status(500).json({
+			error: `Internal server error while getting current question: ${e}`,
+		});
 	}
-});
-
-// app.get('/api/help', async (req, res) => {});
-
-app.get('/api/hint', async (_req, _res) => {
-	// TODO
 });
 
 app.post('/api/join', async (req, res) => {
 	// Validate POST req input
 	const { handle } = req.body;
 	if (typeof handle !== 'string') {
-		return res.status(400).json({ error: `Invalid handle in POST request. Expected a string, got: '${handle}'` });
+		return res.status(400).json({
+			error: `Invalid handle in POST request. Expected a string, got: '${handle}'`,
+		});
 	}
 
 	try {
@@ -84,10 +97,14 @@ app.post('/api/join', async (req, res) => {
 		// If player exists, update is_playing on their existing entry.
 		// If player doesn't exist, create entry in players table with handle and is_playing
 		await db.addOrUpdatePlayer({ handle, is_playing: true });
-		res.status(200).json({ message: `User with handle '${handle}' successfully joined game` });
+		res.status(200).json({
+			message: `User with handle '${handle}' successfully joined game`,
+		});
 	} catch (e) {
 		console.error(e);
-		res.status(500).json({ error: `Internal server error while adding or updating player entry: ${e}` });
+		res.status(500).json({
+			error: `Internal server error while adding or updating player entry: ${e}`,
+		});
 	}
 });
 
@@ -95,17 +112,23 @@ app.post('/api/leave', async (req, res) => {
 	// Validate POST req input
 	const { handle } = req.body;
 	if (typeof handle !== 'string') {
-		return res.status(400).json({ error: `Invalid handle in POST request. Expected a string, got: '${handle}'` });
+		return res.status(400).json({
+			error: `Invalid handle in POST request. Expected a string, got: '${handle}'`,
+		});
 	}
-	
+
 	// Set player to inactive status by changing the is_playing property to false.
 	// The player's handle remains in the db for when they decide to join again.
 	try {
 		await db.addOrUpdatePlayer({ handle, is_playing: false });
-		res.status(200).json({ message: `User with handle '${handle}' successfully deleted from game` });
+		res.status(200).json({
+			message: `User with handle '${handle}' successfully deleted from game`,
+		});
 	} catch (e) {
 		console.error(e);
-		res.status(500).json({ error: `Internal server error while updating player entry: ${e}` });
+		res.status(500).json({
+			error: `Internal server error while updating player entry: ${e}`,
+		});
 	}
 });
 
