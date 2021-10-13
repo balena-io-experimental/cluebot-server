@@ -105,11 +105,12 @@ app.post('/api/import', async (req, res) => {
 			// curl --upload-file /path/to/csv https://transfer.sh/
 			// https://transfer.sh/66nb8/config.yml
 			// wget https://transfer.sh/66nb8/config.yml
+			// curl -X POST -H 'Content-Type: application/json' --data '{ "path": "$PATH_TO_LOCAL_CSV" }' "https://$CLUEBOT_SERVER/api/import"
 			return res.status(400).json({ error: `File not found in current directory '${process.cwd()}'. Try transferring a .csv file first with 'curl --upload-file /path/to/file.csv https://transfer.sh', then 'wget' the returned URL from the heroku production server` });
 		}
 
 		await db.importQuestions(path);
-		res.status(200).json({ message: 'Questions imported, duplicates are ignored' });
+		res.status(200).json({ message: 'Questions successfully imported. Duplicates are ignored' });
 	} catch (e) {
 		console.error(e);
 		res.status(500).json({ error: `Internal server error while importing .csv into database: ${e}` });

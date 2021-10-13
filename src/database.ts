@@ -303,9 +303,10 @@ export const setOrUpdateAnswerForPlayer = async ({
 	answer,
 }: Pick<IPlayers, 'handle'> & Pick<IAnswers, 'answer'>) => {
 	try {
-		const player = await getPlayer(handle);
+		let player = await getPlayer(handle);
 		if (!player) {
-			throw new NotFoundError(`Player with handle '${handle}' does not exist`);
+			await addOrUpdatePlayer({ handle });
+			player = await getPlayer(handle);
 		}
 
 		// Get question for the week
@@ -313,7 +314,7 @@ export const setOrUpdateAnswerForPlayer = async ({
 
 		// Update answer if it exists and is newer than a week old
 		const answerIfExists = await Answers()
-			.where({ player_id: player.id, question_id: id })
+			.where({ player_id: player!.id, question_id: id })
 			.orderBy('date_answered', 'desc');
 
 		if (
@@ -326,7 +327,7 @@ export const setOrUpdateAnswerForPlayer = async ({
 		} else {
 			// Else create new entry
 			return await Answers().insert({
-				player_id: player.id,
+				player_id: player!.id,
 				question_id: id,
 				answer,
 				date_answered: toTimestamp(Date.now())
