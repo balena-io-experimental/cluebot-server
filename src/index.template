@@ -379,7 +379,7 @@
             <p id="form-msg"></p>
 
             <input type="button" id="submit" value="Go!" />
-            <div>{{ error_message }}</div>
+            
         </div>
     </div>
 </body>
@@ -393,6 +393,8 @@
 
         const baseFontPx = 14;
         let wrongCounter = baseFontPx;
+
+        console.log('here');
 
         submit.onclick = async function() {
             if (!handle.value || !answer.value) {
@@ -424,7 +426,7 @@
                     })
                     .catch(({ error }) => {
                         console.error(error);
-                        message.innerText = 'Cluebot might be sick with a case of internal server error 🙈, oooorrrr maybe you haven't joined the teamgame flow on Flowdock. Make sure you've joined before you answer!';
+                        message.innerText = 'Cluebot might be sick with a case of internal server error 🙈, oooorrrr maybe you haven\'t joined the teamgame flow on Flowdock. Make sure you\'ve joined before you answer!';
                         message.style.color = 'red';
                     });
             }
