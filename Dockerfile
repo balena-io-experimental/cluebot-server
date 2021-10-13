@@ -36,6 +36,7 @@ COPY .env* tsconfig*.json ./
 RUN npm run build
 
 COPY ./src/index.template ./build/
+COPY ./src/static/ ./build/static/
 
 # Enable udevd so that plugged dynamic hardware devices show up in our container.
 #ENV UDEV=1
