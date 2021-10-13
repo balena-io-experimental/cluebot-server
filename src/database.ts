@@ -1,5 +1,6 @@
 import Knex from 'knex';
 import path from 'path';
+import fs from 'fs';
 
 import { IPlayers, IQuestions, IAnswers } from './types';
 import { NotFoundError, InternalInconsistencyError } from './errors';
@@ -56,6 +57,12 @@ export const destroy = async () => {
 		`);
 		return Promise.resolve();
 	}
+};
+
+export const importQuestions = async (pathToCsv: string) => {
+	console.log('importing quetsions')
+	const csvData = await fs.promises.readFile(path.resolve(__dirname, pathToCsv), 'utf-8');
+	console.log(csvData);
 };
 
 /**
@@ -266,6 +273,19 @@ export const getAnswersForPlayer = async (handle: IPlayers['handle']) => {
 	}
 };
 
+export const getAnswersForCurrentQuestion = async () => {
+	try {
+		const curQuestion = await getCurrentQuestion();
+		const curAnswers = await Answers()
+			.where({ question_id: curQuestion.id })
+			.orderBy('date_answered');
+		return { question: curQuestion, answers: curAnswers };
+	} catch (e) {
+		console.error(`getAnswersForCurrentQuestion error: ${e}`);
+		throw e;
+	}
+}
+
 /**
  * TODO: Handle votes
  */
@@ -300,6 +320,7 @@ export const setOrUpdateAnswerForPlayer = async ({
 				player_id: player.id,
 				question_id: id,
 				answer,
+				date_answered: toTimestamp(Date.now())
 			});
 		}
 	} catch (e) {

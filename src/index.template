@@ -21,11 +21,12 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto;
-            width: 1000px;
-            height: 100%;
+            # width: 1000px;
+            # height: 100%;
         }
         header div {
-            margin-bottom: 5em;
+            # margin-bottom: 5em;
+            padding-top: 2em;
             text-align: center;
         }
         h1 {
@@ -111,11 +112,13 @@
                 <label for="answer">Answer:</label>
                 <textarea name="answer" id="answer" spellcheck="false"></textarea>
             </div>
+            <img src="balena-uwu-smol.png"></img>
 
             <!-- This is for displaying possible error messages, see inline script below. -->
             <p id="form-msg"></p>
 
             <input type="button" id="submit" value="Go!" />
+            <div>{{ error_message }}</div>
         </div>
     </div>
 </body>
@@ -138,7 +141,7 @@
                 wrongCounter += 1;
             } else {
     
-                await fetch('/api/question', { 
+                await fetch('/api/answer', { 
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

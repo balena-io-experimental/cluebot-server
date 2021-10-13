@@ -1,7 +1,7 @@
 # base-image for node on any machine using a template variable,
 # see more about dockerfile templates here: https://www.balena.io/docs/learn/develop/dockerfile/#dockerfile-templates
 # and about balena base images here: https://www.balena.io/docs/reference/base-images/base-images/
-FROM balenalib/%%BALENA_MACHINE_NAME%%-alpine-node:14.17-build as base
+FROM node:14-alpine as base
 
 # SQLite node package requires python?
 RUN apk add --update --no-cache \

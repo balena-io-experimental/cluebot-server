@@ -1,4 +1,4 @@
-import path from 'path';
+import Path from 'path';
 import express from 'express';
 import Mustache from 'mustache';
 import fs from 'fs';
@@ -6,7 +6,7 @@ import fs from 'fs';
 import * as db from './database';
 import { NotFoundError } from './errors';
 
-(() => {
+(async () => {
 	if (!process.env.DB_PATH || typeof process.env.DB_PATH !== 'string') {
 		console.error(`
             Invalid DB_PATH env var, expected one of: 
@@ -16,32 +16,61 @@ import { NotFoundError } from './errors';
         `);
 		process.exit(1);
 	}
+
+	// Migrate to latest db schema
+	await db.migrateLatest();
+	await db.seedRun();
 })();
 
 const app = express();
 const PORT = process.env.PORT;
+
+var error_message = "ERROR";
 
 app.use(express.json());
 
 // Render answer submission page
 app.get('/', async (_req, res) => {
 	const template = fs.readFileSync(
-		path.join(__dirname, 'index.template'),
+		Path.join(__dirname, 'index.template'),
 		'utf8',
 	);
 	const { question } = await db.getCurrentQuestion();
-	const rendered = Mustache.render(template, { question });
+	const rendered = Mustache.render(template, { question, error_message });
 
 	res.send(rendered);
 });
 
-app.post('/api/question', async (req, res) => {
+app.get('/api/players', async (_req, res) => {
+	try {
+		const players = await db.getCurrentPlayers();
+		res.status(200).json(players);
+	
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ error: `Internal server error: ${e}` });
+		error_message = "Eerererrorrr";
+	
+	}
+
+	const template = fs.readFileSync(
+		Path.join(__dirname, 'index.template'),
+		'utf8',
+	);
+	const rendered = Mustache.render(template, { error_message });
+
+	res.send(rendered);
+});
+
+app.post('/api/answer', async (req, res) => {
 	const { handle, answer } = req.body;
 
 	if (typeof handle !== 'string') {
 		return res.status(400).json({
 			error: `Invalid handle in POST request. Expected a string, got: '${handle}'`,
 		});
+
+
 	}
 	if (typeof answer !== 'string') {
 		return res.status(400).json({
@@ -70,6 +99,32 @@ app.post('/api/question', async (req, res) => {
 	}
 });
 
+// TODO: CHANGE TO POST
+app.get('/api/import', async (_req, res) => {
+	//const { path } = req.body;
+	const path = 'test.csv'
+
+	if (typeof path !== 'string' || path[0] === '/' || !path.includes('.csv')) {
+		console.log('not passed', path);
+		return res.status(400).json({ error: `Expected a relative path to a .csv file, got: ${path}` });
+	}
+
+	try {
+		const exists = await fs.promises.stat(Path.resolve(__dirname, path));
+		if (!exists) {
+			console.log('not exssts', process.cwd());
+			return res.status(400).json({ error: `File not found in current directory '${process.cwd()}'. Try importing the .csv file first with scp` });
+		}
+
+		await db.importQuestions(path);
+		res.status(200).json({ message: 'Questions imported, duplicates are ignored' });
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ error: `Internal server error while importing .csv into database: ${e}` });
+	}
+	
+});
+
 // We can use this endpoint for getting hint(s) for a question as well
 app.get('/api/question', async (_req, res) => {
 	try {
@@ -80,6 +135,31 @@ app.get('/api/question', async (_req, res) => {
 		res.status(500).json({
 			error: `Internal server error while getting current question: ${e}`,
 		});
+	}
+});
+
+app.get('/api/db', async (_req, res) => {
+	try {
+		let [ players, questions, answers ] = await Promise.all([
+			db.Players().select(),
+			db.Questions().select(),
+			db.Answers().select()
+		]);
+
+		res.status(200).json({ players, questions, answers });
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ error: `Internal server error: ${e}` });
+	}
+});
+
+app.get('/api/answers', async (_req, res) => {
+	try {
+		const questionWithAnswers = await db.getAnswersForCurrentQuestion();
+		res.status(200).json(questionWithAnswers);
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ error: `Internal server error: ${e}` });
 	}
 });
 
