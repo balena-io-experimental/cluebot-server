@@ -237,53 +237,64 @@ describe('setOrUpdateAnswerForPlayer', () => {
 		)[0].id;
 	});
 
-    afterEach(async () => {
+	afterEach(async () => {
 		await resetDatabase();
 	});
 
-    const getAnswersCount = async () => (await db.Answers().count())[0]['count(*)'];
+	const getAnswersCount = async () =>
+		(await db.Answers().count())[0]['count(*)'];
 
 	it('updates player answer if one exists for the current week', async () => {
 		// Add an answer for handle `obamaout` to the current week's question
-		await db
-			.Answers()
-			.insert({
-				player_id: 3, // corresponds to `obamaout`
-				question_id: curQuestionId,
-				answer: 'Another test',
-				votes: 0,
-				date_answered: moment().utc().format(),
-			})
+		await db.Answers().insert({
+			player_id: 3, // corresponds to `obamaout`
+			question_id: curQuestionId,
+			answer: 'Another test',
+			votes: 0,
+			date_answered: moment().utc().format(),
+		});
 
-        const answerId = (await db.Answers().where({ answer: 'Another test' }).select('id'))[0].id;
+		const answerId = (
+			await db.Answers().where({ answer: 'Another test' }).select('id')
+		)[0].id;
 
-        // Verify number of answers is one more than in test_data.json
-        let numAnswers = await getAnswersCount();
-        expect(numAnswers).toBe(testData.answers.length + 1);
+		// Verify number of answers is one more than in test_data.json
+		let numAnswers = await getAnswersCount();
+		expect(numAnswers).toBe(testData.answers.length + 1);
 
-        // Update answer entry for current question
-        await db.setOrUpdateAnswerForPlayer({ handle: 'obamaout', answer: 'Yet another test' });
+		// Update answer entry for current question
+		await db.setOrUpdateAnswerForPlayer({
+			handle: 'obamaout',
+			answer: 'Yet another test',
+		});
 
-        // Verify number of answers has not changed
-        numAnswers = await getAnswersCount();
-        expect(numAnswers).toBe(testData.answers.length + 1);
+		// Verify number of answers has not changed
+		numAnswers = await getAnswersCount();
+		expect(numAnswers).toBe(testData.answers.length + 1);
 
-        // Verify answer was updated in the correct entr
-        expect((await db.Answers().where({ answer: 'Yet another test' }).select('id'))[0].id).toBe(answerId);
+		// Verify answer was updated in the correct entr
+		expect(
+			(await db.Answers().where({ answer: 'Yet another test' }).select('id'))[0]
+				.id,
+		).toBe(answerId);
 	});
 
 	it('adds a new answer if one does not exist for current week', async () => {
-        // Verify starting answer length
-        let numAnswers = await getAnswersCount();
-        expect(numAnswers).toBe(testData.answers.length);
+		// Verify starting answer length
+		let numAnswers = await getAnswersCount();
+		expect(numAnswers).toBe(testData.answers.length);
 
-        // No answers exist for newest question which was set in beforeEach hook, so simply insert a new answer entry
-        await db.setOrUpdateAnswerForPlayer({ handle: 'ewatson', answer: 'test' });
-        numAnswers = await getAnswersCount();
-        expect(numAnswers).toBe(testData.answers.length + 1);
+		// No answers exist for newest question which was set in beforeEach hook, so simply insert a new answer entry
+		await db.setOrUpdateAnswerForPlayer({ handle: 'ewatson', answer: 'test' });
+		numAnswers = await getAnswersCount();
+		expect(numAnswers).toBe(testData.answers.length + 1);
 
-        // Verify for some reason that newest answer was inserted as a new entry with the expected data
-        // `ewatson` has player_id == 2
-        expect((await db.Answers().where({ answer: 'test', player_id: 2 }).select('id'))[0].id).toBe(testData.answers.length + 1);
-    });
+		// Verify for some reason that newest answer was inserted as a new entry with the expected data
+		// `ewatson` has player_id == 2
+		expect(
+			(
+				await db.Answers().where({ answer: 'test', player_id: 2 }).select('id')
+			)[0].id,
+		).toBe(testData.answers.length + 1);
+	});
 });

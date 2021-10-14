@@ -19,6 +19,11 @@ import { NotFoundError } from './errors';
 
 	// Migrate to latest db schema
 	await db.migrateLatest();
+
+	// TODO: Remove this after using persistent DB in heroku (PostgreSQL)
+	// This is only hardcoded for Hack Week but isn't viable long term
+	// because sqlite3 databases are ephemeral and will reset between deployments
+	await db.seedRun();
 })();
 
 const app = express();
@@ -34,7 +39,7 @@ app.get('/', async (_req, res) => {
 		'utf8',
 	);
 	const { question } = await db.getCurrentQuestion();
-	const rendered = Mustache.render(template, { question});
+	const rendered = Mustache.render(template, { question });
 
 	res.send(rendered);
 });
@@ -43,14 +48,10 @@ app.get('/api/players', async (_req, res) => {
 	try {
 		const players = await db.getCurrentPlayers();
 		res.status(200).json(players);
-	
 	} catch (e) {
 		console.error(e);
 		res.status(500).json({ error: `Internal server error: ${e}` });
-	
-	
 	}
-
 });
 
 app.post('/api/answer', async (req, res) => {
@@ -60,8 +61,6 @@ app.post('/api/answer', async (req, res) => {
 		return res.status(400).json({
 			error: `Invalid handle in POST request. Expected a string, got: '${handle}'`,
 		});
-
-
 	}
 	if (typeof answer !== 'string') {
 		return res.status(400).json({
@@ -105,10 +104,10 @@ app.get('/api/question', async (_req, res) => {
 
 app.get('/api/db', async (_req, res) => {
 	try {
-		let [ players, questions, answers ] = await Promise.all([
+		const [players, questions, answers] = await Promise.all([
 			db.Players().select(),
 			db.Questions().select(),
-			db.Answers().select()
+			db.Answers().select(),
 		]);
 
 		res.status(200).json({ players, questions, answers });

@@ -34,9 +34,11 @@ export const migrateRollback = async () => {
 	});
 };
 
+// TODO: In production, we're seeding the DB with one question for Hack Week demo
+// purposes. Remove the `directory` parameter later when we can refactor PostgreSQL
 export const seedRun = async () => {
 	return knex.seed.run({
-		directory: path.resolve(__dirname, 'seeds'),
+		directory: process.env.SEEDS_PATH,
 	});
 };
 
@@ -60,16 +62,22 @@ export const destroy = async () => {
 };
 
 export const importQuestions = async (pathToCsv: string) => {
-	const allQuestions = await (await Questions().select()).map(({ question }) => question);
-	let jsonFromCsv = await (await csvToJson()
-		.fromFile(path.resolve(__dirname, pathToCsv)))
-		.filter(({ question }) => 
-			!allQuestions.includes(question)
-		);
+	const allQuestions = await (
+		await Questions().select()
+	).map(({ question }) => question);
+	const jsonFromCsv = await (
+		await csvToJson().fromFile(path.resolve(__dirname, pathToCsv))
+	).filter(({ question }) => !allQuestions.includes(question));
 
-	return await Promise.all(jsonFromCsv.map(({ question, hint }) => {
-		return Questions().insert({ question, hint: hint || null, last_asked: null });
-	}));
+	return await Promise.all(
+		jsonFromCsv.map(({ question, hint }) => {
+			return Questions().insert({
+				question,
+				hint: hint || null,
+				last_asked: null,
+			});
+		}),
+	);
 };
 
 /**
@@ -189,9 +197,10 @@ const getQuestionCount = async () => {
 
 export const defaultQuestion = {
 	id: 0,
-	question: "Is it ba-LEE-na or BA-leh-na or ba-LAY-na?",
-	hint: null,
+	question: "What's my name?",
+	hint: 'Look up',
 };
+
 /**
  * Get the current question of the week. Only returns the most recently asked one.
  */
@@ -293,7 +302,7 @@ export const getAnswersForCurrentQuestion = async () => {
 		console.error(`getAnswersForCurrentQuestion error: ${e}`);
 		throw e;
 	}
-}
+};
 
 /**
  * TODO: Handle votes
@@ -330,7 +339,7 @@ export const setOrUpdateAnswerForPlayer = async ({
 				player_id: player!.id,
 				question_id: id,
 				answer,
-				date_answered: toTimestamp(Date.now())
+				date_answered: toTimestamp(Date.now()),
 			});
 		}
 	} catch (e) {

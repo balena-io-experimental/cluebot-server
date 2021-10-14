@@ -18,6 +18,6 @@ module.exports = {
         directory: './src/migrations'
     },
     seeds: {
-        directory: './src/seeds'
+        directory: process.env.SEEDS_PATH
     }
 };
