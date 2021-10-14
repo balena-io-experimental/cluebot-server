@@ -390,11 +390,14 @@
         const answer = document.getElementById('answer');
         const message = document.getElementById('form-msg');
         const submit = document.getElementById('submit');
+        const form = document.getElementById('form');
 
         const baseFontPx = 14;
         let wrongCounter = baseFontPx;
 
         console.log('here');
+
+       
 
         submit.onclick = async function() {
             if (!handle.value || !answer.value) {
@@ -403,6 +406,10 @@
                 message.style.fontSize = `${wrongCounter}px`;
                 wrongCounter += 1;
             } else {
+                 
+                handle.value = '';
+                answer.value = '';
+
     
                 await fetch('/api/answer', { 
                     method: 'POST',
@@ -431,6 +438,7 @@
                     });
             }
         }
+        
     }
 </script>
 </html>
