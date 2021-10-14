@@ -15,7 +15,7 @@ module.exports = {
     },
     useNullAsDefault: true,
     migrations: {
-        directory: './src/migrations'
+        directory: './server/migrations'
     },
     seeds: {
         directory: process.env.SEEDS_PATH

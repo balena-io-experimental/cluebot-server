@@ -8,8 +8,8 @@
     "prebuild": "npm run clean",
     "build": "tsc --project tsconfig.build.json",
     "reseed": "rimraf ./database.sqlite3 && knex migrate:latest && knex seed:run",
-    "dev": "nodemon -r dotenv/config --watch src -e ts src/index.ts dotenv_config_path=./.env.dev",
-    "lint": "balena-lint -e ts -e js --fix src/ tests/",
+    "dev": "nodemon -r dotenv/config --watch server -e ts server/index.ts dotenv_config_path=./.env.dev",
+    "lint": "balena-lint -e ts -e js --fix server/ tests/",
     "clean": "rimraf build",
     "test": "jest"
   },
@@ -53,6 +53,6 @@
     "sqlite3": "^5.0.2"
   },
   "lint-staged": {
-    "*.{ts,tsx}": "balena-lint -e ts -e js --fix src/ tests/"
+    "*.{ts,tsx}": "balena-lint -e ts -e js --fix server/ tests/"
   }
 }

@@ -30,13 +30,13 @@ RUN JOBS=MAX npm ci --unsafe-perm --build-from-source --sqlite=/usr/lib && npm c
 # -- Build step --
 FROM base as build
 # This will copy all necessary files in our root to the working directory in the container
-COPY src/ src/
+COPY server/ server/
 COPY .env* tsconfig*.json ./
 # Build dist
 RUN npm run build
 
-COPY ./src/index.template ./build/
-COPY ./src/static/ ./build/static/
+COPY ./server/index.template ./build/
+COPY ./server/static/ ./build/static/
 
 # Enable udevd so that plugged dynamic hardware devices show up in our container.
 #ENV UDEV=1

@@ -1,4 +1,4 @@
-import * as utils from '../src/utils';
+import * as utils from '../server/utils';
 
 describe('randIntFromInterval', () => {
 	it('generates a random integer within interval when given positive inputs, inclusive', () => {

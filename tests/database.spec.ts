@@ -1,8 +1,8 @@
 import moment from 'moment';
 
-import * as db from '../src/database';
-import { isNewerThan, randIntFromInterval } from '../src/utils';
-import testData from '../src/test_data.json';
+import * as db from '../server/database';
+import { isNewerThan, randIntFromInterval } from '../server/utils';
+import testData from '../server/test_data.json';
 
 // Resets database to contents of testData before each test suite
 const resetDatabase = async () => {

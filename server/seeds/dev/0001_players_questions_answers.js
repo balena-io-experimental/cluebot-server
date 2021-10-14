@@ -1,4 +1,4 @@
-const testData = require('../test_data.json');
+const testData = require('../../test_data.json');
 
 // Seeds database with test data for development/testing purposes.
 exports.seed = function (knex) {
