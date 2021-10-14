@@ -1,6 +1,8 @@
 import Knex from 'knex';
 import path from 'path';
 import csvToJson from 'csvtojson';
+import moment from 'moment';
+import { google } from 'googleapis';
 
 import { IPlayers, IQuestions, IAnswers } from './types';
 import { NotFoundError, InternalInconsistencyError } from './errors';
@@ -18,6 +20,14 @@ const knex = Knex({
 export const Players = () => knex<IPlayers>('players as p');
 export const Questions = () => knex<IQuestions>('questions as q');
 export const Answers = () => knex<IAnswers>('answers as a');
+
+const SPREADSHEET_ID = '1n-Q0zrQHwuLBS3CxRaVrvR_wJbG4xZd3mHRFdPfAvYU';
+const sheets = google.sheets('v4');
+const auth = new google.auth.GoogleAuth({
+	scopes: [
+		'https://www.googleapis.com/auth/spreadsheets',
+	],
+});
 
 /**
  * Migration & seed methods for programmatic use during tests
@@ -154,22 +164,6 @@ export const deletePlayer = async (handle: IPlayers['handle']) => {
 	}
 };
 
-/**
- * Question methods
- */
-const getNewestQuestion = async () => {
-	try {
-		return await Questions()
-			.select(['id', 'question', 'hint', 'last_asked'])
-			.whereNot({ last_asked: null })
-			.orderBy('last_asked', 'desc')
-			.first();
-	} catch (e) {
-		console.error(`getNewestQuestion error: ${e}`);
-		throw e;
-	}
-};
-
 const getOldestQuestion = async () => {
 	try {
 		return await Questions()
@@ -180,18 +174,6 @@ const getOldestQuestion = async () => {
 	} catch (e) {
 		console.error(`getOldestQuestion error: ${e}`);
 		throw e;
-	}
-};
-
-const getQuestionCount = async () => {
-	try {
-		return (await Questions().count('id')) || null;
-	} catch (e) {
-		console.error(`
-			getQuestionCount error: ${e}
-
-			Are there questions in the database?
-		`);
 	}
 };
 
@@ -207,27 +189,44 @@ export const defaultQuestion = {
 export const getCurrentQuestion = async (): Promise<
 	Pick<IQuestions, 'id' | 'question' | 'hint'>
 > => {
+	// Acquire an auth client, and bind it to all future calls
+	const authClient = await auth.getClient();
+	google.options({ auth: authClient });
+
 	try {
-		const numQuestions = await getQuestionCount();
-		if (
-			!numQuestions ||
-			(Array.isArray(numQuestions) && !numQuestions.length)
-		) {
-			console.error(
-				'There are no questions in the database, sending a default question',
+		const getPayload = {
+			spreadsheetId: SPREADSHEET_ID,
+				range: 'A2:C'
+		}
+		const getResponse = await sheets.spreadsheets.values.get(getPayload);
+
+		const rows: string[][] = getResponse.data.values as string[][];
+
+		const questions = rows.map((row: string[], index: number) => { return { id: index + 2, question: row[0], hint: row[1], last_asked: row[2] } });
+		let question = questions.find(q => !q.last_asked) as IQuestions;
+
+		if (!question) {
+			console.error('All questions are answered, sending the oldest question');
+
+			question = questions.reduce((previousValue, currentValue) =>
+				moment(previousValue.last_asked).isAfter(currentValue.last_asked) ? currentValue : previousValue
 			);
-			return defaultQuestion;
 		}
-		// The current question is the question with the most recent
-		// timestamp, hence it's equal to the "newest question".
-		let newestQuestion = await getNewestQuestion();
-		if (!newestQuestion || !isNewerThan(newestQuestion.last_asked as string)) {
-			await setCurrentQuestion();
-			newestQuestion = await getNewestQuestion();
-		}
-		// Logically the function should have thrown before now, so even if newestQuestion may be
-		// undefined according to TS, it should be safe to cast it here.
-		return newestQuestion as IQuestions;
+
+		const setPayload = {
+			spreadsheetId: SPREADSHEET_ID,
+			range: `C${question.id}:C${question.id}`,
+			valueInputOption: 'USER_ENTERED',
+			auth: authClient,
+			requestBody: {
+				values: [
+					[moment().format('DD/MM/YYYY')],
+				],
+			},
+		};
+		await sheets.spreadsheets.values.update(setPayload)
+
+		return question;
 	} catch (e) {
 		console.error(`
 			getCurrentQuestion error: ${e}
