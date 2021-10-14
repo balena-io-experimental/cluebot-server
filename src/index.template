@@ -110,209 +110,193 @@
             padding: 10px;
             justify-content: center;
         }
+
         /*Animated text*/
-        
+        .bouncing-text {
+            position: relative;
+            display: flex;
+        }
+
+        //.b, .o, .u, .n, .c, .e, 
+        .m, .a, .y {
+            position: relative;
+            color: #4cc9f0;
+            text-shadow: 0 3px #4361ee, 0 5px #4361ee, 0 7px #4361ee;
+        }
+
+        .m{
+            animation: bounce 1s ease infinite .1s;
+            -webkit-animation: bounce 1s ease infinite .1s;
+        }
+        .a{
+            animation: bounce 1s ease infinite .2s;
+            -webkit-animation: bounce 1s ease infinite .2s;
+        }
+
+        .y{
+            animation: bounce 1s ease infinite .3s;
+            -webkit-animation: bounce 1s ease infinite .3s;
+        }
+
+        .b {
+            animation: bounce 1s ease infinite .4s;
+            -webkit-animation: bounce 1s ease infinite .4s;
+        }
+
+        .e {
+            animation: bounce 1s ease infinite .5s;
+            -webkit-animation: bounce 1s ease infinite .5s;
+        }
+
+        .s {
+            animation: bounce 1s ease infinite .6s;
+            -webkit-animation: bounce 1s ease infinite .6s;
+        }
+
+        .e_1 {
+            animation: bounce 1s ease infinite .7s;
+            -webkit-animation: bounce 1s ease infinite .7s;
+        }
+
+        .n {
+            animation: bounce 1s ease infinite .8s;
+            -webkit-animation: bounce 1s ease infinite .8s;
+        }
+
+        .a_1 {
+            animation: bounce 1s ease infinite .9s;
+            -webkit-animation: bounce 1s ease infinite .9s;
+        }
+
+        .i {
+            animation: bounce 1s ease infinite 1s;
+            -webkit-animation: bounce 1s ease infinite 1s;
+        }
+
+        .w{
+            animation: bounce 1s ease infinite 1.1s;
+            -webkit-animation: bounce 1s ease infinite 1.1s;
+        }
+
+        .i_1{
+            animation: bounce 1s ease infinite 1.2s;
+            -webkit-animation: bounce 1s ease infinite 1.2s;
+        }
+
+        .l{
+            animation: bounce 1s ease infinite 1.3s;
+            -webkit-animation: bounce 1s ease infinite 1.3s;
+        }
+
+        .l_1{
+            animation: bounce 1s ease infinite 1.4s;
+            -webkit-animation: bounce 1s ease infinite 1.4s;
+        }
+
+        .n_1{
+            animation: bounce 1s ease infinite 1.5s;
+            -webkit-animation: bounce 1s ease infinite 1.5s;
+        }
+
+        .o {
+            animation: bounce 1s ease infinite 1.6s;
+            -webkit-animation: bounce 1s ease infinite 1.6s;
+        }
+
+        .t {
+            animation: bounce 1s ease infinite 1.7s;
+            -webkit-animation: bounce 1s ease infinite 1.7s;
+        }
+
+        .i_2 {
+            animation: bounce 1s ease infinite 1.7s;
+            -webkit-animation: bounce 1s ease infinite 1.7s;
+        }
 
 
-.bouncing-text {
-  position: relative;
-  display: flex;
-}
+        .c {
+            animation: bounce 1s ease infinite 1.8s;
+            -webkit-animation: bounce 1s ease infinite 1.8s;
+        }
 
-//.b, .o, .u, .n, .c, .e, 
+        .e {
+            animation: bounce 1s ease infinite 1.9s;
+            -webkit-animation: bounce 1s ease infinite 1.9s;
+        }
 
-.m, .a, .y {
-  position: relative;
-  color: #4cc9f0;
-  text-shadow: 0 3px #4361ee, 0 5px #4361ee, 0 7px #4361ee;
-}
+        .y_1 {
+            animation: bounce 1s ease infinite 2.0s;
+            -webkit-animation: bounce 1s ease infinite 2.0s;
+        }
 
-.m{
-     animation: bounce 1s ease infinite .1s;
-  -webkit-animation: bounce 1s ease infinite .1s;
-}
-.a{
-      animation: bounce 1s ease infinite .2s;
-  -webkit-animation: bounce 1s ease infinite .2s;
-}
+        .o_1 {
+            animation: bounce 1s ease infinite 2.1s;
+            -webkit-animation: bounce 1s ease infinite 2.1s;
+        }
 
-.y{
-       animation: bounce 1s ease infinite .3s;
-  -webkit-animation: bounce 1s ease infinite .3s;
-}
+        .u {
+            animation: bounce 1s ease infinite 2.2s;
+            -webkit-animation: bounce 1s ease infinite 2.2s;
+        }
 
+        @keyframes bounce {
+                0%   { transform: scale(1,1) translateY(0); }
+                10%  { transform: scale(1.1,.9) translateY(0); }
+                30%  { transform: scale(.9,1.1)   translateY(-20px);}
+                50%  { transform: scale(1.05,.95) translateY(0); }
+                58%  { transform: scale(1,1) translateY(-7px); }
+                65%  { transform: scale(1,1) translateY(0);}
+                100% { transform: scale(1,1) translateY(0);}
+            }
 
-.b {
-  animation: bounce 1s ease infinite .4s;
-  -webkit-animation: bounce 1s ease infinite .4s;
-}
+        @-webkit-keyframes bounce {
+            0%   { transform: scale(1,1) translateY(0); }
+                10%  { transform: scale(1.1,.9) translateY(0); }
+                30%  { transform: scale(.9,1.1)   translateY(-20px);}
+                50%  { transform: scale(1.05,.95) translateY(0); }
+                58%  { transform: scale(1,1) translateY(-7px);}
+                65%  { transform: scale(1,1) translateY(0);}
+                100% { transform: scale(1,1) translateY(0);} 
+        }
 
-.e {
-  animation: bounce 1s ease infinite .5s;
- -webkit-animation: bounce 1s ease infinite .5s;
-}
+        .bouncing-text:before, .bouncing-text:after {
+            content:"";
+            position: absolute;
+            background-color: rgba(0,0,0,0.4);
+            width: 50px;
+            height:5px;
+            border-radius:50%;
+            top:40px;
+            z-index:-1;
+        }
 
-.s {
-  animation: bounce 1s ease infinite .6s;
- -webkit-animation: bounce 1s ease infinite .6s;
-}
+        .bouncing-text:before {
+            left:0;
+            animation: scale 1s linear infinite;
+            -webkit-animation: scale 1s linear infinite;
+        }
 
-.e_1 {
-  animation: bounce 1s ease infinite .7s;
- -webkit-animation: bounce 1s ease infinite .7s;
-}
+        @keyframes scale {
+            0% {transform: scaleX(1);}
+            25% {transform: scaleX(0.4);}
+            50% {transform: scaleX(1);}
+            75% {transform: scaleX(0.9);}
+            100% {transform: scaleX(1);}
+        }
 
-.n {
-  animation: bounce 1s ease infinite .8s;
- -webkit-animation: bounce 1s ease infinite .8s;
-}
+        @-webkit-keyframes scale {
+            0% {transform: scaleX(1);}
+            25% {transform: scaleX(0.4);}
+            50% {transform: scaleX(1);}
+            75% {transform: scaleX(0.9);}
+            100% {transform: scaleX(1);}
+        }
 
-.a_1 {
-  animation: bounce 1s ease infinite .9s;
- -webkit-animation: bounce 1s ease infinite .9s;
-}
-
-.i {
-  animation: bounce 1s ease infinite 1s;
- -webkit-animation: bounce 1s ease infinite 1s;
-}
-
-.w{
-  animation: bounce 1s ease infinite 1.1s;
- -webkit-animation: bounce 1s ease infinite 1.1s;
-}
-
-.i_1{
-  animation: bounce 1s ease infinite 1.2s;
- -webkit-animation: bounce 1s ease infinite 1.2s;
-}
-
-.l{
-  animation: bounce 1s ease infinite 1.3s;
- -webkit-animation: bounce 1s ease infinite 1.3s;
-}
-
-.l_1{
-  animation: bounce 1s ease infinite 1.4s;
- -webkit-animation: bounce 1s ease infinite 1.4s;
-}
-
-.n_1{
-  animation: bounce 1s ease infinite 1.5s;
- -webkit-animation: bounce 1s ease infinite 1.5s;
-}
-
-.o {
-  animation: bounce 1s ease infinite 1.6s;
-  -webkit-animation: bounce 1s ease infinite 1.6s;
-}
-
-.t {
-  animation: bounce 1s ease infinite 1.7s;
-  -webkit-animation: bounce 1s ease infinite 1.7s;
-}
-
-.i_2 {
-  animation: bounce 1s ease infinite 1.7s;
-  -webkit-animation: bounce 1s ease infinite 1.7s;
-}
-
-
-.c {
-  animation: bounce 1s ease infinite 1.8s;
-  -webkit-animation: bounce 1s ease infinite 1.8s;
-}
-
-.e {
-  animation: bounce 1s ease infinite 1.9s;
-  -webkit-animation: bounce 1s ease infinite 1.9s;
-}
-
-.y_1 {
-  animation: bounce 1s ease infinite 2.0s;
-  -webkit-animation: bounce 1s ease infinite 2.0s;
-}
-
-.o_1 {
-  animation: bounce 1s ease infinite 2.1s;
-  -webkit-animation: bounce 1s ease infinite 2.1s;
-}
-
-
-.u {
-  animation: bounce 1s ease infinite 2.2s;
-  -webkit-animation: bounce 1s ease infinite 2.2s;
-}
-
-
-
-
- @keyframes bounce {
-        0%   { transform: scale(1,1) translateY(0); }
-        10%  { transform: scale(1.1,.9) translateY(0); }
-        30%  { transform: scale(.9,1.1)   translateY(-20px);}
-        50%  { transform: scale(1.05,.95) translateY(0); }
-        58%  { transform: scale(1,1) translateY(-7px); }
-        65%  { transform: scale(1,1) translateY(0);}
-        100% { transform: scale(1,1) translateY(0);}
-    }
-
-@-webkit-keyframes bounce {
-       0%   { transform: scale(1,1) translateY(0); }
-        10%  { transform: scale(1.1,.9) translateY(0); }
-        30%  { transform: scale(.9,1.1)   translateY(-20px);}
-        50%  { transform: scale(1.05,.95) translateY(0); }
-        58%  { transform: scale(1,1) translateY(-7px);}
-        65%  { transform: scale(1,1) translateY(0);}
-        100% { transform: scale(1,1) translateY(0);} 
-}
-
-
-.bouncing-text:before, .bouncing-text:after {
-  content:"";
-  position: absolute;
-  background-color: rgba(0,0,0,0.4);
-  width: 50px;
-  height:5px;
-  border-radius:50%;
-  top:40px;
-  z-index:-1;
-}
-
-
-
-.bouncing-text:before {
-  left:0;
-  animation: scale 1s linear infinite;
-  -webkit-animation: scale 1s linear infinite;
-}
-
-@keyframes scale {
-  0% {transform: scaleX(1);}
-  25% {transform: scaleX(0.4);}
-  50% {transform: scaleX(1);}
-  75% {transform: scaleX(0.9);}
-  100% {transform: scaleX(1);}
-}
-
-@-webkit-keyframes scale {
-   0% {transform: scaleX(1);}
-  25% {transform: scaleX(0.4);}
-  50% {transform: scaleX(1);}
-  75% {transform: scaleX(0.9);}
-  100% {transform: scaleX(1);}
-}
-
-.bouncing-text:after {
-  left: 57px;
-  animation: scale 1s linear infinite .1s;
-  -webkit-animation: scale 1s linear infinite .1s;
-}
-
-
-
-
-
+        .bouncing-text:after {
+            left: 57px;
+            animation: scale 1s linear infinite .1s;
+            -webkit-animation: scale 1s linear infinite .1s;
+        }
     </style>
 </head>
 
@@ -395,10 +379,6 @@
         const baseFontPx = 14;
         let wrongCounter = baseFontPx;
 
-        console.log('here');
-
-       
-
         submit.onclick = async function() {
             if (!handle.value || !answer.value) {
                 message.innerText = 'Did you forget something? 👀';
@@ -410,7 +390,6 @@
                 handle.value = '';
                 answer.value = '';
 
-    
                 await fetch('/api/answer', { 
                     method: 'POST',
                     headers: {
@@ -438,7 +417,6 @@
                     });
             }
         }
-        
     }
 </script>
 </html>
