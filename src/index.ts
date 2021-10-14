@@ -90,34 +90,6 @@ app.post('/api/answer', async (req, res) => {
 	}
 });
 
-app.post('/api/import', async (req, res) => {
-	// Local path in heroku server deployment
-	const { path } = req.body;
-
-	if (typeof path !== 'string' || path[0] === '/' || !path.includes('.csv')) {
-		console.log('not passed', path);
-		return res.status(400).json({ error: `Expected a relative path to a .csv file, got: ${path}` });
-	}
-
-	try {
-		const exists = await fs.promises.stat(Path.resolve(__dirname, path));
-		if (!exists) {
-			// curl --upload-file /path/to/csv https://transfer.sh/
-			// https://transfer.sh/66nb8/config.yml
-			// wget https://transfer.sh/66nb8/config.yml
-			// curl -X POST -H 'Content-Type: application/json' --data '{ "path": "$PATH_TO_LOCAL_CSV" }' "https://$CLUEBOT_SERVER/api/import"
-			return res.status(400).json({ error: `File not found in current directory '${process.cwd()}'. Try transferring a .csv file first with 'curl --upload-file /path/to/file.csv https://transfer.sh', then 'wget' the returned URL from the heroku production server` });
-		}
-
-		await db.importQuestions(path);
-		res.status(200).json({ message: 'Questions successfully imported. Duplicates are ignored' });
-	} catch (e) {
-		console.error(e);
-		res.status(500).json({ error: `Internal server error while importing .csv into database: ${e}` });
-	}
-	
-});
-
 // We can use this endpoint for getting hint(s) for a question as well
 app.get('/api/question', async (_req, res) => {
 	try {
