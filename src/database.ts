@@ -189,8 +189,8 @@ const getQuestionCount = async () => {
 
 export const defaultQuestion = {
 	id: 0,
-	question: "What's my name?",
-	hint: 'Look up',
+	question: "Is it ba-LEE-na or BA-leh-na or ba-LAY-na?",
+	hint: null,
 };
 /**
  * Get the current question of the week. Only returns the most recently asked one.
