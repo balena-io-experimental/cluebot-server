@@ -24,9 +24,7 @@ export const Answers = () => knex<IAnswers>('answers as a');
 const SPREADSHEET_ID = '1n-Q0zrQHwuLBS3CxRaVrvR_wJbG4xZd3mHRFdPfAvYU';
 const sheets = google.sheets('v4');
 const auth = new google.auth.GoogleAuth({
-	scopes: [
-		'https://www.googleapis.com/auth/spreadsheets',
-	],
+	scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
 /**
@@ -193,48 +191,67 @@ export const getCurrentQuestion = async (): Promise<
 	const authClient = await auth.getClient();
 	google.options({ auth: authClient });
 
+	const getPayload = {
+		spreadsheetId: SPREADSHEET_ID,
+		range: 'A2:C',
+	};
+	let getResponse = null;
+
 	try {
-		const getPayload = {
-			spreadsheetId: SPREADSHEET_ID,
-				range: 'A2:C'
-		}
-		const getResponse = await sheets.spreadsheets.values.get(getPayload);
-
-		const rows: string[][] = getResponse.data.values as string[][];
-
-		const questions = rows.map((row: string[], index: number) => { return { id: index + 2, question: row[0], hint: row[1], last_asked: row[2] } });
-		let question = questions.find(q => !q.last_asked) as IQuestions;
-
-		if (!question) {
-			console.error('All questions are answered, sending the oldest question');
-
-			question = questions.reduce((previousValue, currentValue) =>
-				moment(previousValue.last_asked).isAfter(currentValue.last_asked) ? currentValue : previousValue
-			);
-		}
-
-		const setPayload = {
-			spreadsheetId: SPREADSHEET_ID,
-			range: `C${question.id}:C${question.id}`,
-			valueInputOption: 'USER_ENTERED',
-			auth: authClient,
-			requestBody: {
-				values: [
-					[moment().format('DD/MM/YYYY')],
-				],
-			},
-		};
-		await sheets.spreadsheets.values.update(setPayload)
-
-		return question;
+		getResponse = await sheets.spreadsheets.values.get(getPayload);
 	} catch (e) {
 		console.error(`
-			getCurrentQuestion error: ${e}
+			Error getting current question: ${e}
 
 			Sending a default question.
 		`);
 		return defaultQuestion;
 	}
+
+	const rows: string[][] = getResponse.data.values as string[][];
+	const questions = rows.map((row: string[], index: number) => {
+		return {
+			id: index,
+			question: row[0],
+			hint: row[1],
+			last_asked: row[2],
+		};
+	});
+
+	let question = questions.filter(q => q.last_asked).reduce((previousValue, currentValue) =>
+		moment(previousValue.last_asked, 'DD/MM/YYYY').isAfter(moment(currentValue.last_asked, 'DD/MM/YYYY'))
+			? previousValue
+			: currentValue,
+	);
+	
+	const oneWeekAgo = moment().subtract(1, 'weeks')
+	if (moment(question.last_asked).isBefore(oneWeekAgo)) {
+		question = questions[question.id + 1];
+
+		const setPayload = {
+			spreadsheetId: SPREADSHEET_ID,
+			// This is the row number, so compensate for the title plus 0-based index
+			range: `C${question.id + 2}:C${question.id + 2}`,
+			valueInputOption: 'USER_ENTERED',
+			auth: authClient,
+			requestBody: {
+				values: [[moment().format('DD/MM/YYYY')]],
+			},
+		};
+
+		try {
+			await sheets.spreadsheets.values.update(setPayload);
+		} catch (e) {
+			console.error(`
+		Error setting current question: ${e}
+		
+		Sending a default question.
+		`);
+			return defaultQuestion;
+		}
+	}
+
+	return question;
 };
 
 /**
