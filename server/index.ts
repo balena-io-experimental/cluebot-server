@@ -29,7 +29,14 @@ const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use('/', express.static(Path.resolve(__dirname, '..', 'public')));
-app.use('/static', express.static(Path.resolve(__dirname, '..', 'static')));
+app.use(
+	['/static'],
+	express.static(Path.resolve(__dirname, '..', 'client', 'static')),
+);
+app.use(
+	'/fonts',
+	express.static(Path.resolve(__dirname, '..', 'client', 'fonts')),
+);
 
 app.get('/api/players', async (_req, res) => {
 	try {
