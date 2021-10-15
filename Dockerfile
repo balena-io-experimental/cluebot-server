@@ -30,16 +30,12 @@ RUN JOBS=MAX npm ci --unsafe-perm --build-from-source --sqlite=/usr/lib && npm c
 # -- Build step --
 FROM base as build
 # This will copy all necessary files in our root to the working directory in the container
-COPY server/ server/
-COPY .env* tsconfig*.json ./
+COPY server/ server/ client/
+COPY .env.prod tsconfig*.json webpack.config.js ./
 # Build dist
 RUN npm run build
 
-COPY ./server/index.template ./build/
-COPY ./server/static/ ./build/static/
-
-# Enable udevd so that plugged dynamic hardware devices show up in our container.
-#ENV UDEV=1
+COPY ./static/ ./build/static/
 
 # server.js will run when container starts up on the device
 CMD ["npm", "start"]

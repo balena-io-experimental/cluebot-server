@@ -5,16 +5,17 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "target": "es2020",
-        "lib": ["es2020"],
+        "lib": ["es2020", "dom"],
         "noUnusedLocals": true,
 		"noUnusedParameters": true,
-        "types": ["node", "jest"],
+        "types": ["node", "jest", "react"],
         "preserveConstEnums": true,
         "removeComments": true,
         "allowJs": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "jsx": "react"
     },
     "include": ["server/**/*", "tests/**/*", "client/**/*"],
     "exclude": ["/node_modules/"]

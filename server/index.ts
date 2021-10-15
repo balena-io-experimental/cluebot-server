@@ -1,7 +1,5 @@
 import Path from 'path';
 import express from 'express';
-import Mustache from 'mustache';
-import fs from 'fs';
 
 import * as db from './database';
 import { NotFoundError } from './errors';
@@ -30,19 +28,8 @@ const app = express();
 const PORT = process.env.PORT;
 
 app.use(express.json());
-app.use('/static', express.static(Path.resolve(__dirname, 'static')));
-
-// Render answer submission page
-app.get('/', async (_req, res) => {
-	const template = fs.readFileSync(
-		Path.join(__dirname, 'index.template'),
-		'utf8',
-	);
-	const { question } = await db.getCurrentQuestion();
-	const rendered = Mustache.render(template, { question });
-
-	res.send(rendered);
-});
+app.use('/', express.static(Path.resolve(__dirname, '..', 'public')));
+app.use('/static', express.static(Path.resolve(__dirname, '..', 'static')));
 
 app.get('/api/players', async (_req, res) => {
 	try {

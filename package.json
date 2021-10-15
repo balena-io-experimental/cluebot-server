@@ -4,12 +4,14 @@
   "description": "A bot host for a collaborative puzzle game about remote work",
   "main": "index.js",
   "scripts": {
-    "start": "node -r dotenv/config build/index.js dotenv_config_path=./.env.prod",
+    "start": "node -r dotenv/config build/server/index.js dotenv_config_path=./.env.prod",
     "prebuild": "npm run clean",
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json && NODE_ENV=production webpack",
     "reseed": "rimraf ./database.sqlite3 && knex migrate:latest && knex seed:run",
-    "dev": "nodemon -r dotenv/config --watch server -e ts server/index.ts dotenv_config_path=./.env.dev",
-    "lint": "balena-lint -e ts -e js --fix server/ tests/",
+    "dev:server": "nodemon -r dotenv/config --watch server -e ts server/index.ts dotenv_config_path=./.env.dev",
+    "dev:client": "NODE_ENV=development webpack serve",
+    "dev": "concurrently -n client,server -k --restart-tries=3 \"npm run dev:client\" \"npm run dev:server\"",
+    "lint": "balena-lint -e ts -e js --fix server/ client/ tests/",
     "clean": "rimraf build",
     "test": "jest"
   },
@@ -30,7 +32,12 @@
     "@types/moment": "^2.13.0",
     "@types/mustache": "^4.1.2",
     "@types/node": "^16.10.3",
+    "@types/react": "^17.0.30",
+    "@types/react-dom": "^17.0.9",
     "@types/sqlite3": "^3.1.7",
+    "@types/styled-components": "^5.1.15",
+    "concurrently": "^6.3.0",
+    "html-webpack-plugin": "^5.3.2",
     "husky": "^7.0.2",
     "jest": "^27.2.5",
     "lint-staged": "^11.2.3",
@@ -38,9 +45,13 @@
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.0.5",
+    "ts-loader": "^9.2.6",
     "ts-node": "^10.3.0",
     "typed-error": "^3.2.1",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.3",
+    "webpack": "^5.58.2",
+    "webpack-cli": "^4.9.0",
+    "webpack-dev-server": "^4.3.1"
   },
   "dependencies": {
     "csvtojson": "^2.0.10",
@@ -50,9 +61,12 @@
     "moment": "^2.29.1",
     "mustache": "^4.2.0",
     "node-gyp": "^8.2.0",
-    "sqlite3": "^5.0.2"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "sqlite3": "^5.0.2",
+    "styled-components": "^5.3.1"
   },
   "lint-staged": {
-    "*.{ts,tsx}": "balena-lint -e ts -e js --fix server/ tests/"
+    "*.{ts,tsx}": "balena-lint -e ts -e js --fix server/ client/ tests/"
   }
 }

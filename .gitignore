@@ -1,3 +1,4 @@
 node_modules
 database.sqlite3
 build
+public/bundle.js
