@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require("copy-webpack-plugin");
 const dotenv = require('dotenv');
 
 const envPath = process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev';
@@ -29,6 +30,11 @@ module.exports = {
     plugins: [
 		new HtmlWebpackPlugin({
 			template: path.resolve(__dirname, 'client', 'index.html'),
+		}),
+		new CopyPlugin({
+			patterns: [
+				{ from: "client/static/", to: "static/" },
+			],
 		}),
 	],
     devServer: {

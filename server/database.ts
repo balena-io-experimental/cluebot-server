@@ -6,7 +6,7 @@ import { google } from 'googleapis';
 
 import { IPlayers, IQuestions, IAnswers } from './types';
 import { NotFoundError, InternalInconsistencyError } from './errors';
-import { randIntFromInterval, toTimestamp, isNewerThan } from './utils';
+import { randIntFromInterval, toTimestamp } from './utils';
 
 const knex = Knex({
 	client: 'sqlite3',
@@ -21,7 +21,7 @@ export const Players = () => knex<IPlayers>('players as p');
 export const Questions = () => knex<IQuestions>('questions as q');
 export const Answers = () => knex<IAnswers>('answers as a');
 
-const SPREADSHEET_ID = '1n-Q0zrQHwuLBS3CxRaVrvR_wJbG4xZd3mHRFdPfAvYU';
+const SPREADSHEET_ID = '1hsuIel8SBhl8Bc3Q3qBNgg9_QlsPxFGDoT-ybMq2Bvo';
 const sheets = google.sheets('v4');
 const auth = new google.auth.GoogleAuth({
 	scopes: ['https://www.googleapis.com/auth/spreadsheets'],
@@ -184,9 +184,10 @@ export const defaultQuestion = {
 /**
  * Get the current question of the week. Only returns the most recently asked one.
  */
-export const getCurrentQuestion = async (): Promise<
-	Pick<IQuestions, 'id' | 'question' | 'hint'>
-> => {
+// TODO: Move this to its own `sheets` module and maybe break it down to a couple of functions
+export const getCurrentQuestion = async (
+	newQuestion: boolean = false,
+): Promise<Pick<IQuestions, 'id' | 'question' | 'hint'>> => {
 	// Acquire an auth client, and bind it to all future calls
 	const authClient = await auth.getClient();
 	google.options({ auth: authClient });
@@ -218,19 +219,27 @@ export const getCurrentQuestion = async (): Promise<
 		};
 	});
 
-	let question = questions.filter(q => q.last_asked).reduce((previousValue, currentValue) =>
-		moment(previousValue.last_asked, 'DD/MM/YYYY').isAfter(moment(currentValue.last_asked, 'DD/MM/YYYY'))
-			? previousValue
-			: currentValue,
-	);
-	
-	const oneWeekAgo = moment().subtract(1, 'weeks')
-	if (moment(question.last_asked).isBefore(oneWeekAgo)) {
+	// Get last asked question
+	let question = questions
+		.filter((q) => q.last_asked)
+		.reduce(
+			(previousValue, currentValue) =>
+				moment(previousValue.last_asked, 'DD/MM/YYYY').isAfter(
+					moment(currentValue.last_asked, 'DD/MM/YYYY'),
+				)
+					? previousValue
+					: currentValue,
+			questions[0],
+		);
+
+	// If we want a new question, get the next one in the (ordered) array and update
+	// its last_asked cell in the sheet
+	if (newQuestion) {
 		question = questions[question.id + 1];
 
 		const setPayload = {
 			spreadsheetId: SPREADSHEET_ID,
-			// This is the row number, so compensate for the title plus 0-based index
+			// Range contains the row number, so we compensate for the title and 0-based index of our array
 			range: `C${question.id + 2}:C${question.id + 2}`,
 			valueInputOption: 'USER_ENTERED',
 			auth: authClient,
@@ -342,10 +351,7 @@ export const setOrUpdateAnswerForPlayer = async ({
 			.where({ player_id: player!.id, question_id: id })
 			.orderBy('date_answered', 'desc');
 
-		if (
-			answerIfExists.length &&
-			isNewerThan(answerIfExists[0].date_answered, 1, 'weeks')
-		) {
+		if (answerIfExists.length) {
 			return await Answers()
 				.where({ id: answerIfExists[0].id })
 				.update({ answer, date_answered: toTimestamp(Date.now()) });

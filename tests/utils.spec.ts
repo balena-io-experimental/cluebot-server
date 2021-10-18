@@ -25,6 +25,3 @@ describe('toTimestamp', () => {
 		);
 	});
 });
-
-// Not writing tests for utils.isNewerThan as the internal methods
-// use `moment` heavily. `moment` is very well tested.

@@ -1,7 +1,7 @@
 import moment from 'moment';
 
 import * as db from '../server/database';
-import { isNewerThan, randIntFromInterval } from '../server/utils';
+import { randIntFromInterval } from '../server/utils';
 import testData from '../server/test_data.json';
 
 // Resets database to contents of testData before each test suite
@@ -144,7 +144,6 @@ describe('getCurrentQuestion', () => {
 		const questions = await db.Questions().whereNot({ last_asked: null });
 		expect(questions).toHaveLength(1);
 		expect(questions[0].last_asked).not.toBeNull();
-		expect(isNewerThan(questions[0].last_asked!)).toBeTruthy();
 
 		// Verify a question was set since there were no questions available
 		expect(db.setCurrentQuestion).toHaveBeenCalledTimes(1);
