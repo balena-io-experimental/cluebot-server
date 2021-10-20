@@ -13,16 +13,3 @@ export const randIntFromInterval = (min: number, max: number): number =>
  */
 export const toTimestamp = (time: Date | number): string =>
 	moment(time).utc().format();
-
-/**
- * Check if timestamp is newer than or equal to a week old.
- */
-export const isNewerThan = (
-	time: moment.Moment | string,
-	count: number = 1,
-	unit: 'weeks' | 'days' = 'weeks',
-): boolean => {
-	const today = moment();
-	const inputDate = moment(time);
-	return today.subtract(count, unit).isSameOrBefore(inputDate);
-};

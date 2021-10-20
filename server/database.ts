@@ -1,10 +1,12 @@
 import Knex from 'knex';
 import path from 'path';
 import csvToJson from 'csvtojson';
+import moment from 'moment';
+import { google } from 'googleapis';
 
 import { IPlayers, IQuestions, IAnswers } from './types';
 import { NotFoundError, InternalInconsistencyError } from './errors';
-import { randIntFromInterval, toTimestamp, isNewerThan } from './utils';
+import { randIntFromInterval, toTimestamp } from './utils';
 
 const knex = Knex({
 	client: 'sqlite3',
@@ -18,6 +20,12 @@ const knex = Knex({
 export const Players = () => knex<IPlayers>('players as p');
 export const Questions = () => knex<IQuestions>('questions as q');
 export const Answers = () => knex<IAnswers>('answers as a');
+
+const SPREADSHEET_ID = '1hsuIel8SBhl8Bc3Q3qBNgg9_QlsPxFGDoT-ybMq2Bvo';
+const sheets = google.sheets('v4');
+const auth = new google.auth.GoogleAuth({
+	scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
 
 /**
  * Migration & seed methods for programmatic use during tests
@@ -154,22 +162,6 @@ export const deletePlayer = async (handle: IPlayers['handle']) => {
 	}
 };
 
-/**
- * Question methods
- */
-const getNewestQuestion = async () => {
-	try {
-		return await Questions()
-			.select(['id', 'question', 'hint', 'last_asked'])
-			.whereNot({ last_asked: null })
-			.orderBy('last_asked', 'desc')
-			.first();
-	} catch (e) {
-		console.error(`getNewestQuestion error: ${e}`);
-		throw e;
-	}
-};
-
 const getOldestQuestion = async () => {
 	try {
 		return await Questions()
@@ -183,18 +175,6 @@ const getOldestQuestion = async () => {
 	}
 };
 
-const getQuestionCount = async () => {
-	try {
-		return (await Questions().count('id')) || null;
-	} catch (e) {
-		console.error(`
-			getQuestionCount error: ${e}
-
-			Are there questions in the database?
-		`);
-	}
-};
-
 export const defaultQuestion = {
 	id: 0,
 	question: "What's my name?",
@@ -204,38 +184,83 @@ export const defaultQuestion = {
 /**
  * Get the current question of the week. Only returns the most recently asked one.
  */
-export const getCurrentQuestion = async (): Promise<
-	Pick<IQuestions, 'id' | 'question' | 'hint'>
-> => {
+// TODO: Move this to its own `sheets` module and maybe break it down to a couple of functions
+export const getCurrentQuestion = async (
+	newQuestion: boolean = false,
+): Promise<Pick<IQuestions, 'id' | 'question' | 'hint'>> => {
+	// Acquire an auth client, and bind it to all future calls
+	const authClient = await auth.getClient();
+	google.options({ auth: authClient });
+
+	const getPayload = {
+		spreadsheetId: SPREADSHEET_ID,
+		range: 'A2:C',
+	};
+	let getResponse = null;
+
 	try {
-		const numQuestions = await getQuestionCount();
-		if (
-			!numQuestions ||
-			(Array.isArray(numQuestions) && !numQuestions.length)
-		) {
-			console.error(
-				'There are no questions in the database, sending a default question',
-			);
-			return defaultQuestion;
-		}
-		// The current question is the question with the most recent
-		// timestamp, hence it's equal to the "newest question".
-		let newestQuestion = await getNewestQuestion();
-		if (!newestQuestion || !isNewerThan(newestQuestion.last_asked as string)) {
-			await setCurrentQuestion();
-			newestQuestion = await getNewestQuestion();
-		}
-		// Logically the function should have thrown before now, so even if newestQuestion may be
-		// undefined according to TS, it should be safe to cast it here.
-		return newestQuestion as IQuestions;
+		getResponse = await sheets.spreadsheets.values.get(getPayload);
 	} catch (e) {
 		console.error(`
-			getCurrentQuestion error: ${e}
+			Error getting current question: ${e}
 
 			Sending a default question.
 		`);
 		return defaultQuestion;
 	}
+
+	const rows: string[][] = getResponse.data.values as string[][];
+	const questions = rows.map((row: string[], index: number) => {
+		return {
+			id: index,
+			question: row[0],
+			hint: row[1],
+			last_asked: row[2],
+		};
+	});
+
+	// Get last asked question
+	let question = questions
+		.filter((q) => q.last_asked)
+		.reduce(
+			(previousValue, currentValue) =>
+				moment(previousValue.last_asked, 'DD/MM/YYYY').isAfter(
+					moment(currentValue.last_asked, 'DD/MM/YYYY'),
+				)
+					? previousValue
+					: currentValue,
+			questions[0],
+		);
+
+	// If we want a new question, get the next one in the (ordered) array and update
+	// its last_asked cell in the sheet
+	if (newQuestion) {
+		question = questions[question.id + 1];
+
+		const setPayload = {
+			spreadsheetId: SPREADSHEET_ID,
+			// Range contains the row number, so we compensate for the title and 0-based index of our array
+			range: `C${question.id + 2}:C${question.id + 2}`,
+			valueInputOption: 'USER_ENTERED',
+			auth: authClient,
+			requestBody: {
+				values: [[moment().format('DD/MM/YYYY')]],
+			},
+		};
+
+		try {
+			await sheets.spreadsheets.values.update(setPayload);
+		} catch (e) {
+			console.error(`
+		Error setting current question: ${e}
+		
+		Sending a default question.
+		`);
+			return defaultQuestion;
+		}
+	}
+
+	return question;
 };
 
 /**
@@ -326,10 +351,7 @@ export const setOrUpdateAnswerForPlayer = async ({
 			.where({ player_id: player!.id, question_id: id })
 			.orderBy('date_answered', 'desc');
 
-		if (
-			answerIfExists.length &&
-			isNewerThan(answerIfExists[0].date_answered, 1, 'weeks')
-		) {
+		if (answerIfExists.length) {
 			return await Answers()
 				.where({ id: answerIfExists[0].id })
 				.update({ answer, date_answered: toTimestamp(Date.now()) });
