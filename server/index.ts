@@ -85,7 +85,7 @@ app.post('/api/answer', async (req, res) => {
 
 // We can use this endpoint for getting hint(s) for a question as well
 app.get('/api/question', async (_req, res) => {
-	const { new_question: newQuestion } = _req.body;
+	const newQuestion = _req.query.new_question === "true";
 
 	try {
 		const curQuestion = await db.getCurrentQuestion(newQuestion);
