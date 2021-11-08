@@ -104,19 +104,18 @@ export const getPlayer = async (handle: IPlayers['handle']) => {
 
 /**
  * If player doesn't exist, add them as a new entry.
- * If player exists (based on their handle), update their information.
+ * If player exists, ignore any database errors.
  */
-export const addOrUpdatePlayer = async ({
-	handle,
-	is_playing = true,
-}: Partial<Pick<IPlayers, 'handle' | 'is_playing'>>) => {
+export const addPlayer = async ({
+	handle
+}: Partial<Pick<IPlayers, 'handle'>>) => {
 	try {
 		return await Players()
-			.insert({ handle, is_playing })
+			.insert({ handle })
 			.onConflict(['handle'])
-			.merge();
+			.ignore();
 	} catch (e) {
-		console.error(`addOrUpdatePlayer error: ${e}`);
+		console.error(`addPlayer error: ${e}`);
 		throw e;
 	}
 };
@@ -266,7 +265,7 @@ export const setOrUpdateAnswerForPlayer = async ({
 	try {
 		let player = await getPlayer(handle);
 		if (!player) {
-			await addOrUpdatePlayer({ handle });
+			await addPlayer({ handle });
 			player = await getPlayer(handle);
 		}
 
