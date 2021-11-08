@@ -81,14 +81,9 @@ export const getPlayer = async (handle: IPlayers['handle']) => {
 	try {
 		const player = await Players().select().where({ handle });
 		if (player && Array.isArray(player) && player.length === 1) {
-			// As sqlite3 doesn't have boolean string types, convert
-			// `is_playing` to a true/false boolean (instead of 1/0)
-			const { is_playing } = player[0];
 			return {
 				id: player[0].id,
-				handle: player[0].handle,
-				is_playing:
-					typeof is_playing === 'number' ? is_playing === 1 : is_playing,
+				handle: player[0].handle
 			};
 		} else if (player.length > 1) {
 			throw new InternalInconsistencyError(`
@@ -116,18 +111,6 @@ export const addPlayer = async ({
 			.ignore();
 	} catch (e) {
 		console.error(`addPlayer error: ${e}`);
-		throw e;
-	}
-};
-
-/**
- * Delete a player based on their handle - for when people leave company
- */
-export const deletePlayer = async (handle: IPlayers['handle']) => {
-	try {
-		return await Players().del().where({ handle });
-	} catch (e) {
-		console.error(`deletePlayer error: ${e}`);
 		throw e;
 	}
 };

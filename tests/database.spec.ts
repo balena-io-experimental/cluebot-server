@@ -64,25 +64,6 @@ describe('addPlayer', () => {
 	})
 });
 
-describe('deletePlayer', () => {
-	it('deletes a player that exists in the players table', async () => {
-		const toBeDeleted = testData.players[0].handle;
-		await db.deletePlayer(toBeDeleted);
-
-		// Should not exist in players table after deletion
-		expect(await db.Players().where({ handle: toBeDeleted })).toHaveLength(0);
-	});
-
-	it('should not error when trying to delete a player not in the db', async () => {
-		const doesNotExist = 'britney-spears';
-		await db.deletePlayer(doesNotExist);
-
-		// Should not exist. Test should also not throw since db.deletePlayer should handle
-		// the case of trying to delete a nonexistent player.
-		expect(await db.Players().where({ handle: doesNotExist })).toHaveLength(0);
-	});
-});
-
 const currentQuestion = {
 	question: "What's up?",
 	hint: null,
