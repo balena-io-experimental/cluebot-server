@@ -93,21 +93,6 @@ app.get('/api/question', async (_req, res) => {
 	}
 });
 
-app.get('/api/db', async (_req, res) => {
-	try {
-		const [players, questions, answers] = await Promise.all([
-			db.Players().select(),
-			db.Questions().select(),
-			db.Answers().select(),
-		]);
-
-		res.status(200).json({ players, questions, answers });
-	} catch (e) {
-		console.error(e);
-		res.status(500).json({ error: `Internal server error: ${e}` });
-	}
-});
-
 app.get('/api/answers', async (_req, res) => {
 	try {
 		const questionWithAnswers = await db.getAnswersForCurrentQuestion();
