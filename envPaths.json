@@ -1,0 +1,5 @@
+{
+    "test": ".env.test",
+    "development": ".env.dev",
+    "production": ".env.prod"
+}

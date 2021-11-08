@@ -1,27 +1,23 @@
 import Path from 'path';
 import express from 'express';
+import dotenv from 'dotenv';
+import envPaths from '../envPaths.json';
+// @ts-ignore
+dotenv.config({ path: Path.resolve(__dirname, '..', envPaths[process.env.NODE_ENV]) });
 
 import * as db from './database';
 import { NotFoundError } from './errors';
 
 (async () => {
-	if (!process.env.DB_PATH || typeof process.env.DB_PATH !== 'string') {
+	if (!process.env.DB) {
 		console.error(`
-            Invalid DB_PATH env var, expected one of: 
-                - '/path/to/database.sqlite3'
-                - ':memory:'
-            Received '${process.env.DB_PATH}'
-        `);
+			DB env var not specified, exiting.
+		`);
 		process.exit(1);
 	}
 
 	// Migrate to latest db schema
 	await db.migrateLatest();
-
-	// TODO: Remove this after using persistent DB in heroku (PostgreSQL)
-	// This is only hardcoded for Hack Week but isn't viable long term
-	// because sqlite3 databases are ephemeral and will reset between deployments
-	await db.seedRun();
 })();
 
 const app = express();
@@ -30,7 +26,7 @@ const PORT = process.env.PORT;
 app.use(express.json());
 app.use('/', express.static(Path.resolve(__dirname, '..', 'public')));
 app.use(
-	['/static'],
+	'/static',
 	express.static(Path.resolve(__dirname, '..', 'client', 'static')),
 );
 app.use(

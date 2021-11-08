@@ -8,13 +8,9 @@ import { IPlayers, IQuestions, IAnswers } from './types';
 import { NotFoundError, InternalInconsistencyError } from './errors';
 import { randIntFromInterval, toTimestamp } from './utils';
 
-const knex = Knex({
-	client: 'sqlite3',
-	connection: {
-		filename: process.env.DB_PATH!,
-	},
-	useNullAsDefault: true,
-});
+import knexfile from '../knexfile';
+// @ts-ignore
+const knex = Knex(knexfile[process.env.NODE_ENV]);
 
 // By passing the interface types here, we get better autocompletion support later in the query
 export const Players = () => knex<IPlayers>('players as p');
@@ -23,31 +19,27 @@ export const Answers = () => knex<IAnswers>('answers as a');
 
 const SPREADSHEET_ID = '1hsuIel8SBhl8Bc3Q3qBNgg9_QlsPxFGDoT-ybMq2Bvo';
 const sheets = google.sheets('v4');
-const auth = new google.auth.GoogleAuth({
+const authOptions: any = {
 	scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
+};
+if (process.env.NODE_ENV === 'development') {
+	authOptions.keyFilename = path.resolve(__dirname, '..', 'google-credentials.json');
+};
+const auth = new google.auth.GoogleAuth(authOptions);
 
 /**
  * Migration & seed methods for programmatic use during tests
  */
 export const migrateLatest = () => {
-	return knex.migrate.latest({
-		directory: path.resolve(__dirname, 'migrations'),
-	});
+	return knex.migrate.latest();
 };
 
 export const migrateRollback = async () => {
-	return knex.migrate.rollback({
-		directory: path.resolve(__dirname, 'migrations'),
-	});
+	return knex.migrate.rollback();
 };
 
-// TODO: In production, we're seeding the DB with one question for Hack Week demo
-// purposes. Remove the `directory` parameter later when we can refactor PostgreSQL
 export const seedRun = async () => {
-	return knex.seed.run({
-		directory: process.env.SEEDS_PATH,
-	});
+	return knex.seed.run();
 };
 
 /**
