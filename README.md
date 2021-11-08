@@ -15,6 +15,14 @@ npm run dev
 
 `npm install` will generate `.env` files for each environment among development, test, and production in the `postinstall` script. To modify env vars as needed, edit the generated and `.gitignore`-d `.env*` file in project root for your development environment. To modify generated env vars permanently, edit `scripts/postinstall.ts`. Note that secrets added to scripts/dev.ts are not `.gitignore`-d.
 
+By default, a `database.sqlite3` file will be created in project root and used during development and testing. To develop with Postgres locally, run `DB=pg npm run dev` and update development `.env` file with your local Postgres username, password, host, and database as needed. The default host is `localhost`, and the default database is `cluebot`.
+
+To develop the server locally without starting up webpack-dev-server for the client, run `CLIENT=0 npm run dev`.
+
+In production, Heroku's Postgres service supplies DATABASE_URL as an env var, so no need to specify it explicitly.
+
+See `scripts/dev.ts` for detailed usage instructions for `npm run dev`.
+
 # Deployment
 cluebot-server may be deployed in one of two places:
 ## Heroku
