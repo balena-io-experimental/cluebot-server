@@ -3,7 +3,7 @@ import path from 'path';
 import moment from 'moment';
 import { google } from 'googleapis';
 
-import { IPlayers, IQuestions, IAnswers } from './types';
+import { IPlayer, IQuestion, IAnswer } from './types';
 import { NotFoundError, InternalInconsistencyError } from './errors';
 import { toTimestamp } from './utils';
 
@@ -12,8 +12,8 @@ import knexfile from '../knexfile';
 const knex = Knex(knexfile[process.env.NODE_ENV]);
 
 // By passing the interface types here, we get better autocompletion support later in the query
-export const Players = () => knex<IPlayers>('players');
-export const Answers = () => knex<IAnswers>('answers');
+export const Players = (alias?: string) => knex<IPlayer>(alias ? `players as ${alias}` : 'players');
+export const Answers = (alias?: string) => knex<IAnswer>(alias ? `answers as ${alias}` : 'answers');
 
 const SPREADSHEET_ID = '1hsuIel8SBhl8Bc3Q3qBNgg9_QlsPxFGDoT-ybMq2Bvo';
 const sheets = google.sheets('v4');
@@ -77,7 +77,7 @@ export const getCurrentPlayers = async () => {
 /**
  * Get details for a player
  */
-export const getPlayer = async (handle: IPlayers['handle']) => {
+export const getPlayer = async (handle: IPlayer['handle']) => {
 	try {
 		const player = await Players().select().where({ handle });
 		if (player && Array.isArray(player) && player.length === 1) {
@@ -103,7 +103,7 @@ export const getPlayer = async (handle: IPlayers['handle']) => {
  */
 export const addPlayer = async ({
 	handle
-}: Partial<Pick<IPlayers, 'handle'>>) => {
+}: Partial<Pick<IPlayer, 'handle'>>) => {
 	try {
 		return await Players()
 			.insert({ handle })
@@ -127,7 +127,7 @@ export const defaultQuestion = {
 // TODO: Move this to its own `sheets` module and maybe break it down to a couple of functions
 export const getCurrentQuestion = async (
 	newQuestion: boolean = false,
-): Promise<Pick<IQuestions, 'id' | 'question' | 'hint'>> => {
+): Promise<Pick<IQuestion, 'id' | 'question' | 'hint'>> => {
 	// Acquire an auth client, and bind it to all future calls
 	const authClient = await auth.getClient();
 	google.options({ auth: authClient });
@@ -206,16 +206,19 @@ export const getCurrentQuestion = async (
 /**
  * Answer methods
  */
-export const getAnswersForPlayer = async (handle: IPlayers['handle']) => {
+/**
+ * TODO: This method is not currently used but may be useful for 
+ * listing question history based on player.
+ */
+export const getAnswersForPlayer = async (handle: IPlayer['handle']) => {
 	try {
 		const player = await getPlayer(handle);
 		if (!player) {
 			throw new NotFoundError(`Player with handle '${handle}' does not exist`);
 		}
-		return await Answers()
-			.join('questions as q', 'a.question_id', 'q.id')
+		return await Answers('a')
 			.where({ player_id: player.id })
-			.select('a.answer', 'a.votes', 'a.date_answered', 'q.question')
+			.select('a.answer', 'a.votes', 'a.date_answered', 'a.question_id')
 			.orderBy('a.date_answered', 'desc');
 	} catch (e) {
 		console.error(`getAnswersForPlayer error: ${e}`);
@@ -226,7 +229,7 @@ export const getAnswersForPlayer = async (handle: IPlayers['handle']) => {
 export const getAnswersForCurrentQuestion = async () => {
 	try {
 		const curQuestion = await getCurrentQuestion();
-		const curAnswers = await Answers()
+		const curAnswers = await Answers('a')
 			.join('players as p', 'a.player_id', 'p.id')
 			.select('a.answer', 'a.votes', 'a.date_answered', 'p.handle')
 			.where({ question_id: curQuestion.id })
@@ -244,7 +247,7 @@ export const getAnswersForCurrentQuestion = async () => {
 export const setOrUpdateAnswerForPlayer = async ({
 	handle,
 	answer,
-}: Pick<IPlayers, 'handle'> & Pick<IAnswers, 'answer'>) => {
+}: Pick<IPlayer, 'handle'> & Pick<IAnswer, 'answer'>) => {
 	try {
 		let player = await getPlayer(handle);
 		if (!player) {
@@ -255,7 +258,10 @@ export const setOrUpdateAnswerForPlayer = async ({
 		// Get question for the week
 		const { id } = await getCurrentQuestion();
 
-		// Update answer if it exists and is newer than a week old
+		// Update answer if it exists
+		// TODO: this will overwrite really old answers for the same
+		// question. Maybe users want to have a record of their last
+		// answer to the question even if it's from a year or more ago.
 		const answerIfExists = await Answers()
 			.where({ player_id: player!.id, question_id: id })
 			.orderBy('date_answered', 'desc');
