@@ -1,21 +1,19 @@
 import Knex from 'knex';
 import path from 'path';
-import csvToJson from 'csvtojson';
 import moment from 'moment';
 import { google } from 'googleapis';
 
 import { IPlayers, IQuestions, IAnswers } from './types';
 import { NotFoundError, InternalInconsistencyError } from './errors';
-import { randIntFromInterval, toTimestamp } from './utils';
+import { toTimestamp } from './utils';
 
 import knexfile from '../knexfile';
 // @ts-ignore
 const knex = Knex(knexfile[process.env.NODE_ENV]);
 
 // By passing the interface types here, we get better autocompletion support later in the query
-export const Players = () => knex<IPlayers>('players as p');
-export const Questions = () => knex<IQuestions>('questions as q');
-export const Answers = () => knex<IAnswers>('answers as a');
+export const Players = () => knex<IPlayers>('players');
+export const Answers = () => knex<IAnswers>('answers');
 
 const SPREADSHEET_ID = '1hsuIel8SBhl8Bc3Q3qBNgg9_QlsPxFGDoT-ybMq2Bvo';
 const sheets = google.sheets('v4');
@@ -61,25 +59,6 @@ export const destroy = async () => {
 	}
 };
 
-export const importQuestions = async (pathToCsv: string) => {
-	const allQuestions = await (
-		await Questions().select()
-	).map(({ question }) => question);
-	const jsonFromCsv = await (
-		await csvToJson().fromFile(path.resolve(__dirname, pathToCsv))
-	).filter(({ question }) => !allQuestions.includes(question));
-
-	return await Promise.all(
-		jsonFromCsv.map(({ question, hint }) => {
-			return Questions().insert({
-				question,
-				hint: hint || null,
-				last_asked: null,
-			});
-		}),
-	);
-};
-
 /**
  * Player methods
  */
@@ -88,7 +67,7 @@ export const importQuestions = async (pathToCsv: string) => {
  */
 export const getCurrentPlayers = async () => {
 	try {
-		return await Players().select(['handle']).where({ is_playing: true });
+		return await Players().select(['id', 'handle']);
 	} catch (e) {
 		console.error(`getCurrentPlayers error: ${e}`);
 		throw e;
@@ -150,19 +129,6 @@ export const deletePlayer = async (handle: IPlayers['handle']) => {
 		return await Players().del().where({ handle });
 	} catch (e) {
 		console.error(`deletePlayer error: ${e}`);
-		throw e;
-	}
-};
-
-const getOldestQuestion = async () => {
-	try {
-		return await Questions()
-			.select(['id', 'question', 'hint', 'last_asked'])
-			.whereNot({ last_asked: null })
-			.orderBy('last_asked', 'asc')
-			.first();
-	} catch (e) {
-		console.error(`getOldestQuestion error: ${e}`);
 		throw e;
 	}
 };
@@ -253,37 +219,6 @@ export const getCurrentQuestion = async (
 	}
 
 	return question;
-};
-
-/**
- * Select a random question to be set as the current week's question.
- */
-export const setCurrentQuestion = async () => {
-	let chosenQuestionId = 0;
-	try {
-		// If any questions where last_asked == null (i.e. has never been asked), choose a random one
-		const nullQuestions = await Questions().whereNull('last_asked');
-		if (nullQuestions.length) {
-			const chosenIdx = randIntFromInterval(0, nullQuestions.length - 1);
-			chosenQuestionId = nullQuestions[chosenIdx].id;
-		} else {
-			// Else set oldest question as last asked
-			const oldestQuestion = await getOldestQuestion();
-			if (oldestQuestion == null) {
-				throw new InternalInconsistencyError(`
-					Something has gone horribly wrong to reach this point
-				`);
-			}
-			chosenQuestionId = oldestQuestion.id;
-		}
-
-		return await Questions()
-			.where({ id: chosenQuestionId })
-			.update({ last_asked: toTimestamp(Date.now()) });
-	} catch (e) {
-		console.error(`setCurrentQuestion error: ${e}`);
-		throw e;
-	}
 };
 
 /**
