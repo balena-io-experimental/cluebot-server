@@ -1,20 +1,20 @@
-export type DatabaseModel = 'players' | 'questions' | 'answers';
+export type DatabaseModel = 'players' | 'answers';
 
-export interface IPlayers {
+export interface IPlayer {
 	id: number;
 	name: string;
 	handle: string;
 	is_playing: boolean | number;
 }
 
-export interface IQuestions {
+export interface IQuestion {
 	id: number;
 	question: string;
-	hint: string | null;
-	last_asked: string | null;
+	hint: string;
+	last_asked: string;
 }
 
-export interface IAnswers {
+export interface IAnswer {
 	id: number;
 	player_id: number;
 	question_id: number;

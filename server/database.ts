@@ -1,53 +1,43 @@
 import Knex from 'knex';
 import path from 'path';
-import csvToJson from 'csvtojson';
 import moment from 'moment';
 import { google } from 'googleapis';
 
-import { IPlayers, IQuestions, IAnswers } from './types';
+import { IPlayer, IQuestion, IAnswer } from './types';
 import { NotFoundError, InternalInconsistencyError } from './errors';
-import { randIntFromInterval, toTimestamp } from './utils';
+import { toTimestamp } from './utils';
 
-const knex = Knex({
-	client: 'sqlite3',
-	connection: {
-		filename: process.env.DB_PATH!,
-	},
-	useNullAsDefault: true,
-});
+import knexfile from '../knexfile';
+// @ts-ignore
+const knex = Knex(knexfile[process.env.NODE_ENV]);
 
 // By passing the interface types here, we get better autocompletion support later in the query
-export const Players = () => knex<IPlayers>('players as p');
-export const Questions = () => knex<IQuestions>('questions as q');
-export const Answers = () => knex<IAnswers>('answers as a');
+export const Players = (alias?: string) => knex<IPlayer>(alias ? `players as ${alias}` : 'players');
+export const Answers = (alias?: string) => knex<IAnswer>(alias ? `answers as ${alias}` : 'answers');
 
 const SPREADSHEET_ID = '1hsuIel8SBhl8Bc3Q3qBNgg9_QlsPxFGDoT-ybMq2Bvo';
 const sheets = google.sheets('v4');
-const auth = new google.auth.GoogleAuth({
+const authOptions: any = {
 	scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
+};
+if (process.env.NODE_ENV === 'development') {
+	authOptions.keyFilename = path.resolve(__dirname, '..', 'google-credentials.json');
+};
+const auth = new google.auth.GoogleAuth(authOptions);
 
 /**
  * Migration & seed methods for programmatic use during tests
  */
 export const migrateLatest = () => {
-	return knex.migrate.latest({
-		directory: path.resolve(__dirname, 'migrations'),
-	});
+	return knex.migrate.latest();
 };
 
 export const migrateRollback = async () => {
-	return knex.migrate.rollback({
-		directory: path.resolve(__dirname, 'migrations'),
-	});
+	return knex.migrate.rollback();
 };
 
-// TODO: In production, we're seeding the DB with one question for Hack Week demo
-// purposes. Remove the `directory` parameter later when we can refactor PostgreSQL
 export const seedRun = async () => {
-	return knex.seed.run({
-		directory: process.env.SEEDS_PATH,
-	});
+	return knex.seed.run();
 };
 
 /**
@@ -69,25 +59,6 @@ export const destroy = async () => {
 	}
 };
 
-export const importQuestions = async (pathToCsv: string) => {
-	const allQuestions = await (
-		await Questions().select()
-	).map(({ question }) => question);
-	const jsonFromCsv = await (
-		await csvToJson().fromFile(path.resolve(__dirname, pathToCsv))
-	).filter(({ question }) => !allQuestions.includes(question));
-
-	return await Promise.all(
-		jsonFromCsv.map(({ question, hint }) => {
-			return Questions().insert({
-				question,
-				hint: hint || null,
-				last_asked: null,
-			});
-		}),
-	);
-};
-
 /**
  * Player methods
  */
@@ -96,7 +67,7 @@ export const importQuestions = async (pathToCsv: string) => {
  */
 export const getCurrentPlayers = async () => {
 	try {
-		return await Players().select(['handle']).where({ is_playing: true });
+		return await Players().select(['id', 'handle']);
 	} catch (e) {
 		console.error(`getCurrentPlayers error: ${e}`);
 		throw e;
@@ -106,18 +77,13 @@ export const getCurrentPlayers = async () => {
 /**
  * Get details for a player
  */
-export const getPlayer = async (handle: IPlayers['handle']) => {
+export const getPlayer = async (handle: IPlayer['handle']) => {
 	try {
 		const player = await Players().select().where({ handle });
 		if (player && Array.isArray(player) && player.length === 1) {
-			// As sqlite3 doesn't have boolean string types, convert
-			// `is_playing` to a true/false boolean (instead of 1/0)
-			const { is_playing } = player[0];
 			return {
 				id: player[0].id,
-				handle: player[0].handle,
-				is_playing:
-					typeof is_playing === 'number' ? is_playing === 1 : is_playing,
+				handle: player[0].handle
 			};
 		} else if (player.length > 1) {
 			throw new InternalInconsistencyError(`
@@ -133,44 +99,18 @@ export const getPlayer = async (handle: IPlayers['handle']) => {
 
 /**
  * If player doesn't exist, add them as a new entry.
- * If player exists (based on their handle), update their information.
+ * If player exists, ignore any database errors.
  */
-export const addOrUpdatePlayer = async ({
-	handle,
-	is_playing = true,
-}: Partial<Pick<IPlayers, 'handle' | 'is_playing'>>) => {
+export const addPlayer = async ({
+	handle
+}: Partial<Pick<IPlayer, 'handle'>>) => {
 	try {
 		return await Players()
-			.insert({ handle, is_playing })
+			.insert({ handle })
 			.onConflict(['handle'])
-			.merge();
+			.ignore();
 	} catch (e) {
-		console.error(`addOrUpdatePlayer error: ${e}`);
-		throw e;
-	}
-};
-
-/**
- * Delete a player based on their handle - for when people leave company
- */
-export const deletePlayer = async (handle: IPlayers['handle']) => {
-	try {
-		return await Players().del().where({ handle });
-	} catch (e) {
-		console.error(`deletePlayer error: ${e}`);
-		throw e;
-	}
-};
-
-const getOldestQuestion = async () => {
-	try {
-		return await Questions()
-			.select(['id', 'question', 'hint', 'last_asked'])
-			.whereNot({ last_asked: null })
-			.orderBy('last_asked', 'asc')
-			.first();
-	} catch (e) {
-		console.error(`getOldestQuestion error: ${e}`);
+		console.error(`addPlayer error: ${e}`);
 		throw e;
 	}
 };
@@ -187,7 +127,7 @@ export const defaultQuestion = {
 // TODO: Move this to its own `sheets` module and maybe break it down to a couple of functions
 export const getCurrentQuestion = async (
 	newQuestion: boolean = false,
-): Promise<Pick<IQuestions, 'id' | 'question' | 'hint'>> => {
+): Promise<Pick<IQuestion, 'id' | 'question' | 'hint'>> => {
 	// Acquire an auth client, and bind it to all future calls
 	const authClient = await auth.getClient();
 	google.options({ auth: authClient });
@@ -264,49 +204,21 @@ export const getCurrentQuestion = async (
 };
 
 /**
- * Select a random question to be set as the current week's question.
- */
-export const setCurrentQuestion = async () => {
-	let chosenQuestionId = 0;
-	try {
-		// If any questions where last_asked == null (i.e. has never been asked), choose a random one
-		const nullQuestions = await Questions().whereNull('last_asked');
-		if (nullQuestions.length) {
-			const chosenIdx = randIntFromInterval(0, nullQuestions.length - 1);
-			chosenQuestionId = nullQuestions[chosenIdx].id;
-		} else {
-			// Else set oldest question as last asked
-			const oldestQuestion = await getOldestQuestion();
-			if (oldestQuestion == null) {
-				throw new InternalInconsistencyError(`
-					Something has gone horribly wrong to reach this point
-				`);
-			}
-			chosenQuestionId = oldestQuestion.id;
-		}
-
-		return await Questions()
-			.where({ id: chosenQuestionId })
-			.update({ last_asked: toTimestamp(Date.now()) });
-	} catch (e) {
-		console.error(`setCurrentQuestion error: ${e}`);
-		throw e;
-	}
-};
-
-/**
  * Answer methods
  */
-export const getAnswersForPlayer = async (handle: IPlayers['handle']) => {
+/**
+ * TODO: This method is not currently used but may be useful for 
+ * listing question history based on player.
+ */
+export const getAnswersForPlayer = async (handle: IPlayer['handle']) => {
 	try {
 		const player = await getPlayer(handle);
 		if (!player) {
 			throw new NotFoundError(`Player with handle '${handle}' does not exist`);
 		}
-		return await Answers()
-			.join('questions as q', 'a.question_id', 'q.id')
+		return await Answers('a')
 			.where({ player_id: player.id })
-			.select('a.answer', 'a.votes', 'a.date_answered', 'q.question')
+			.select('a.answer', 'a.votes', 'a.date_answered', 'a.question_id')
 			.orderBy('a.date_answered', 'desc');
 	} catch (e) {
 		console.error(`getAnswersForPlayer error: ${e}`);
@@ -317,7 +229,7 @@ export const getAnswersForPlayer = async (handle: IPlayers['handle']) => {
 export const getAnswersForCurrentQuestion = async () => {
 	try {
 		const curQuestion = await getCurrentQuestion();
-		const curAnswers = await Answers()
+		const curAnswers = await Answers('a')
 			.join('players as p', 'a.player_id', 'p.id')
 			.select('a.answer', 'a.votes', 'a.date_answered', 'p.handle')
 			.where({ question_id: curQuestion.id })
@@ -335,18 +247,21 @@ export const getAnswersForCurrentQuestion = async () => {
 export const setOrUpdateAnswerForPlayer = async ({
 	handle,
 	answer,
-}: Pick<IPlayers, 'handle'> & Pick<IAnswers, 'answer'>) => {
+}: Pick<IPlayer, 'handle'> & Pick<IAnswer, 'answer'>) => {
 	try {
 		let player = await getPlayer(handle);
 		if (!player) {
-			await addOrUpdatePlayer({ handle });
+			await addPlayer({ handle });
 			player = await getPlayer(handle);
 		}
 
 		// Get question for the week
 		const { id } = await getCurrentQuestion();
 
-		// Update answer if it exists and is newer than a week old
+		// Update answer if it exists
+		// TODO: this will overwrite really old answers for the same
+		// question. Maybe users want to have a record of their last
+		// answer to the question even if it's from a year or more ago.
 		const answerIfExists = await Answers()
 			.where({ player_id: player!.id, question_id: id })
 			.orderBy('date_answered', 'desc');

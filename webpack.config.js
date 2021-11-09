@@ -3,15 +3,18 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require("copy-webpack-plugin");
 const dotenv = require('dotenv');
 
-const envPath = process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev';
+const envPaths = require('./envPaths.json');
+
+const env = process.env.NODE_ENV || 'development';
+
 dotenv.config({
-	path: envPath
+	path: envPaths[env]
 });
 
 module.exports = {
     entry: './client/index.tsx',
     target: 'web',
-    mode: process.env.NODE_ENV || 'development',
+    mode: env,
     output: {
         path: path.resolve(__dirname, 'build', 'public'),
         filename: 'bundle.js'
@@ -34,6 +37,7 @@ module.exports = {
 		new CopyPlugin({
 			patterns: [
 				{ from: "client/static/", to: "static/" },
+				{ from: "client/fonts/", to: "fonts/" }
 			],
 		}),
 	],
@@ -41,7 +45,7 @@ module.exports = {
 		proxy: {
 			'/': `http://localhost:${process.env.PORT}`
 		},
-		port: process.env.DEV_SERVER_PROXY_PORT,
+		port: 8080,
 		compress: true,
 		hot: true,
 		liveReload: true,
